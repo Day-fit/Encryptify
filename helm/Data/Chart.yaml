@@ -1,0 +1,13 @@
+apiVersion: v2
+name: Dependencies
+description: This chart contains data-related dependencies of the Encryptify system
+version: 0.0.1-SNAPSHOT
+
+dependencies:
+  - name: postgresql
+    version: 16.7.21
+    repository: https://charts.bitnami.com/bitnami
+
+  - name: redis
+    version: 21.2.12
+    repository: https://charts.bitnami.com/bitnami
