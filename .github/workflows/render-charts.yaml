@@ -33,8 +33,12 @@ jobs:
             --set global.postgresql.auth.database=${DB_NAME} > rendered/Data.yaml
 
       - name: Upload rendered files
+        env:
+          CD_PAT: ${{ secrets.CD_PAT }}
+          CD_REPO: ${{ secrets.CD_REPO }}
         run: |
           git config --global user.name "CD Pipeline"
+          git config --global user.email "cd_pipeline@dayfit.pl"
           git add rendered/
           git diff --cached --quiet || git commit -m "Uploading new CD configuration"
           git push https://${{ secrets.CD_PAT }}@github.com/${{ secrets.CD_REPO }}.git HEAD:main
