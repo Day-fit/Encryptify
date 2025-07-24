@@ -32,6 +32,14 @@ jobs:
             --set global.postgresql.auth.postgresPassword=${DB_SU_PASSWORD} \
             --set global.postgresql.auth.database=${DB_NAME} > rendered/Data.yaml
 
+      - name: Debug secrets
+        run: |
+          echo "CD_REPO: $CD_REPO"
+          echo "CD_PAT length: ${#CD_PAT}"
+        env:
+          CD_REPO: ${{ secrets.CD_REPO }}
+          CD_PAT: ${{ secrets.CD_PAT }}
+
       - name: Upload rendered files
         env:
           CD_PAT: ${{ secrets.CD_PAT }}
