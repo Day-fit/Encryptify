@@ -41,4 +41,4 @@ jobs:
           git config --global user.email "cd_pipeline@dayfit.pl"
           git add rendered/
           git diff --cached --quiet || git commit -m "Uploading new CD configuration"
-          git push https://${CD_PAT}@github.com/${CD_REPO}.git HEAD:main
+          git push https://$CD_PAT@github.com/$CD_REPO.git HEAD:main
