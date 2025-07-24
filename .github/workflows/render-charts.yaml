@@ -37,4 +37,4 @@ jobs:
           git config --global user.name "CD Pipeline"
           git add rendered/
           git diff --cached --quiet || git commit -m "Uploading new CD configuration"
-          git push https://${{ secrets.CD_PAT }}@github.com/${{ secrets.CD_REPO }}.git
+          git push https://${{ secrets.CD_PAT }}@github.com/${{ secrets.CD_REPO }}.git HEAD:main
