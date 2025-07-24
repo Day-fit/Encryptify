@@ -1,0 +1,30 @@
+name: Upload rendered charts into CD repository
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-cd:
+    runs-on: ubuntu-22.04
+    environment:
+      name: CD pipeline
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Render CD files
+        run: |
+          mkdir -p rendered
+          helm template data helm/Data 
+            --set global.postgresql.auth.username=${DB_USERNAME} \
+            --set global.postgresql.auth.password=${DB_PASSWORD} \
+            --set global.postgresql.auth.postgresPassword=${DB_SU_PASSWORD} \
+            --set global.postgresql.auth.database=${DB_NAME} > rendered/Data.yaml
+
+      - name: Upload rendered files
+        run: |
+          git config --global user.name "CD Pipeline"
+          git add rendered/
+          git diff --cached --quiet || git commit -m "Uploading new CD configuration"
+          git push https://{{ secrets.CD_PAT }}@github.com/{{ secrets.CD_REPO }}.git
