@@ -15,7 +15,7 @@ jobs:
 
       - name: Build helm dependencies
         run: | 
-          cd helm
+          cd helm/Data
           helm dependency build
 
       - name: Render CD files
