@@ -34,7 +34,7 @@ jobs:
 
       - name: Debug secrets
         run: |
-          echo "CD_REPO: $CD_REPO"
+          echo "CD_REPO: ${#CD_REPO}"
           echo "CD_PAT length: ${#CD_PAT}"
         env:
           CD_REPO: ${{ secrets.CD_REPO }}
