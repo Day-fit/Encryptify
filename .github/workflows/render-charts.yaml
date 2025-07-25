@@ -42,8 +42,9 @@ jobs:
 
       - name: Debug Git remote
         run: |
+          git remote set-url origin https://${CD_PAT}@github.com/${CD_REPO}.git
+          git ls-remote origin HEAD:main
           git remote -v
-          git ls-remote https://$CD_PAT@github.com/$CD_REPO.git || echo "::error:: ls-remote failed"
         env:
           CD_REPO: ${{ secrets.CD_REPO }}
           CD_PAT: ${{ secrets.CD_PAT }}
