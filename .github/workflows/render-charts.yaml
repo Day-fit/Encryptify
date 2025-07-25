@@ -40,6 +40,11 @@ jobs:
           CD_REPO: ${{ secrets.CD_REPO }}
           CD_PAT: ${{ secrets.CD_PAT }}
 
+      - name: Debug Git remote
+        run: |
+          git remote -v
+          git ls-remote https://$CD_PAT@github.com/$CD_REPO.git || echo "::error:: ls-remote failed"
+
       - name: Upload rendered files
         env:
           CD_PAT: ${{ secrets.CD_PAT }}
