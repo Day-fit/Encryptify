@@ -32,30 +32,17 @@ jobs:
             --set global.postgresql.auth.postgresPassword=${DB_SU_PASSWORD} \
             --set global.postgresql.auth.database=${DB_NAME} > rendered/Data.yaml
 
-      - name: Debug secrets
-        run: |
-          echo "CD_REPO: ${#CD_REPO}"
-          echo "CD_PAT length: ${#CD_PAT}"
-        env:
-          CD_REPO: ${{ secrets.CD_REPO }}
-          CD_PAT: ${{ secrets.CD_PAT }}
-
-      - name: Debug Git remote
-        run: |
-          git remote set-url origin https://${CD_PAT}@github.com/${CD_REPO}.git
-          git ls-remote origin HEAD:main
-          git remote -v
-        env:
-          CD_REPO: ${{ secrets.CD_REPO }}
-          CD_PAT: ${{ secrets.CD_PAT }}
-
-      - name: Upload rendered files
+      - name: Upload rendered files to CD repo
         env:
           CD_PAT: ${{ secrets.CD_PAT }}
           CD_REPO: ${{ secrets.CD_REPO }}
         run: |
-          git config --global user.name "CD Pipeline"
-          git config --global user.email "cd_pipeline@dayfit.pl"
-          git add rendered/
-          git diff --cached --quiet || git commit -m "Uploading new CD configuration"
-          git push https://$CD_PAT@github.com/$CD_REPO.git HEAD:main
+          cd rendered
+          git init
+          git config user.name "CD Pipeline"
+          git config user.email "cd_pipeline@dayfit.pl"
+          git remote add origin https://x-access-token:${CD_PAT}@github.com/${CD_REPO}.git
+          git add .
+          git commit -m "Upload new CD configuration"
+          git branch -M main
+          git push -f origin main
