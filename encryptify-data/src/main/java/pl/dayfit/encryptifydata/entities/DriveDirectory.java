@@ -24,5 +24,5 @@ public class DriveDirectory {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private User uploadedBy;
+    private EncryptifyUser uploadedBy;
 }

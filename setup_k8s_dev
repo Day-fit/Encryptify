@@ -1,4 +1,7 @@
+#!/bin/bash
 [ -f .env ] || exit 1
+mkdir -p rendered
+
 set -a
 . .env
 set +a
@@ -9,4 +12,9 @@ helm template data helm/Data \
   --set global.postgresql.auth.postgresPassword="$DB_SU_PASSWORD" \
   --set global.postgresql.auth.database="$DB_NAME" > rendered/Data.yaml
 kubectl apply -f rendered/Data.yaml
-kubectl port-forward svc/data-postgresql 5432:5432
+
+if netstat -an | grep ':5432' > /dev/null; then
+  echo "Port 5432 (PostgreSQL is probably running, skipping)"
+else
+  kubectl port-forward svc/data-postgresql 5432:5432 &
+fi

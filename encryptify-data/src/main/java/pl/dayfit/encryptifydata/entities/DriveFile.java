@@ -21,12 +21,13 @@ public class DriveFile {
     @Column(nullable = false)
     private String name;
 
-    @Column(columnDefinition = "BLOB", nullable = false)
+    @Lob
+    @Column(nullable = false)
     private byte[] content;
 
     @Column(nullable = false)
     private Instant uploadDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private User uploadedBy;
+    private EncryptifyUser uploadedBy;
 }

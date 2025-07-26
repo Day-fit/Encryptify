@@ -11,7 +11,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class EncryptifyUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
