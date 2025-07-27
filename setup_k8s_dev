@@ -13,7 +13,7 @@ helm template data helm/Data \
   --set global.postgresql.auth.database="$DB_NAME" > rendered/Data.yaml
 kubectl apply -f rendered/Data.yaml
 
-if netstat -an | grep ':5432' > /dev/null; then
+if netstat -an | awk '$0 ~ /:5432([^0-9]|$)/' > /dev/null; then
   echo "Port 5432 (PostgreSQL is probably running, skipping)"
 else
   kubectl port-forward svc/data-postgresql 5432:5432 &

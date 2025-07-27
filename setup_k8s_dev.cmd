@@ -15,4 +15,4 @@ helm template data helm/Data ^
   --set global.postgresql.auth.database=%DB_NAME% > rendered\Data.yaml
 
 kubectl apply -f rendered\Data.yaml
-cmd /c "netstat -ano | findstr :5432 >nul && echo Port 5432 (PostgreSQL is probably running, skipping) || start ""Port Forward"" cmd /k kubectl port-forward svc/data-postgresql 5432:5432"
+cmd /c netstat -ano | findstr /R ":5432[^0-9]" >nul && echo Port 5432 (PostgreSQL is probably running, skipping) || start "Port Forward" cmd /k kubectl port-forward svc/data-postgresql 5432:5432
