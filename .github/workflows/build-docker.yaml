@@ -1,0 +1,8 @@
+name: build-docker.yaml
+on:
+  release:
+    types:
+      - released
+
+jobs:
+

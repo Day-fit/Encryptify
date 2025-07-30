@@ -1,8 +1,8 @@
 name: Upload rendered charts into CD repository
 on:
-  push:
-    branches:
-      - main
+  release:
+    types:
+      - released
 
 jobs:
   update-cd:

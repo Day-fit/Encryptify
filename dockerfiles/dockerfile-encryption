@@ -1,0 +1,24 @@
+FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
+
+LABEL name="encryptify-core"
+LABEL maintainer="Dayfit"
+LABEL description="Encryptify Core Service"
+
+COPY ./.mvn /app/.mvn
+COPY ./mvnw /app/mvnw
+
+COPY ./encryptify-core /app/encryptify-core
+COPY ./encryptify-data /app/encryptify-data
+WORKDIR /app
+
+# Compile source code
+RUN \
+    cd /app/encryptify-data && \
+    ../mvnw clean install -DskipTests && \
+    cd /app/encryptify-core && \
+    ../mvnw package -DskipTests && \
+    mv /app/core/target/encryptify-core-*.jar /app/core.jar
+
+CMD ["java", "-jar", "/app/core.jar"]
+
+EXPOSE 8080
