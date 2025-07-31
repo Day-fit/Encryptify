@@ -1,0 +1,28 @@
+name: test-backend.yml
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  test-core:
+    name: Run Encryptify-Core Tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Encryptify-Core tests
+        run: |
+          cd encryptify-core
+          mvn test
+  test-encryption:
+    name: Run Encryptify-Encryption Tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Encryptify-Encryption tests
+        run: |
+          cd encryptify-encryption
+          mvn test

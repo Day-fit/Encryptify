@@ -1,13 +1,13 @@
 FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
 
-LABEL name="encryptify-core"
+LABEL name="encryptify-encryption"
 LABEL maintainer="Dayfit"
-LABEL description="Encryptify Core Service"
+LABEL description="Encryptify Encryption Service"
 
 COPY ./.mvn /app/.mvn
 COPY ./mvnw /app/mvnw
 
-COPY ./encryptify-core /app/encryptify-core
+COPY ./encryptify-encryption /app/encryptify-encryption
 COPY ./encryptify-data /app/encryptify-data
 WORKDIR /app
 
@@ -15,10 +15,10 @@ WORKDIR /app
 RUN \
     cd /app/encryptify-data && \
     ../mvnw clean install -DskipTests && \
-    cd /app/encryptify-core && \
+    cd /app/encryptify-encryption && \
     ../mvnw package -DskipTests && \
-    mv /app/core/target/encryptify-core-*.jar /app/core.jar
+    mv /app/encryptify-encryption/target/encryptify-encryption-*.jar /app/encryption.jar
 
-CMD ["java", "-jar", "/app/core.jar"]
+CMD ["java", "-jar", "/app/encryption.jar"]
 
-EXPOSE 8080
+EXPOSE 8081
