@@ -26,4 +26,6 @@ public class EncryptifyUser {
 
     @Column(nullable = false)
     private Instant registrationDate;
+
+    private boolean banned = false;
 }
