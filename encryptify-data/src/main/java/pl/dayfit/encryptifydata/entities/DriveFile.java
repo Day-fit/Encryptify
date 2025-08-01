@@ -29,5 +29,10 @@ public class DriveFile {
     private Instant uploadDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private EncryptifyUser uploadedBy;
+    private EncryptifyUser uploader;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private DriveDirectory parent;
+
+    private String publicKey;
 }

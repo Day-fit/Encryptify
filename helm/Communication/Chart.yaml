@@ -1,0 +1,8 @@
+apiVersion: v2
+name: Communication
+version: 0.0.1-SNAPSHOT
+description: This chart contains communication-related dependencies of the Encryptify system
+dependencies:
+  - name: rabbitmq
+    version: 16.0.11
+    repository: https://charts.bitnami.com/bitnami

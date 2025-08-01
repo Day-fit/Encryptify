@@ -1,0 +1,3 @@
+rabbitmq:
+  loadDefinition:
+    enabled: true

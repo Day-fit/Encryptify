@@ -23,7 +23,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setUuid(UUID.randomUUID());
         driveFile.setName(fileRequestDto.name());
         driveFile.setContent(Base64.getDecoder().decode(fileRequestDto.base64Content()));
-        driveFile.setUploadedBy(cacheService.getUserByUsername(uploadedBy));
+        driveFile.setUploader(cacheService.getUserByUsername(uploadedBy));
         driveFile.setUploadDate(Instant.now());
 
         return driveFile;
@@ -33,7 +33,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     public FileResponseDto toResponseDto(DriveFile driveFile) {
         return new FileResponseDto(
                 driveFile.getName(),
-                driveFile.getUploadedBy().getUsername(),
+                driveFile.getUploader().getUsername(),
                 Base64.getEncoder().encodeToString(driveFile.getContent()),
                 driveFile.getUploadDate()
         );
