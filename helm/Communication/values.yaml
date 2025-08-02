@@ -1,3 +1,5 @@
 rabbitmq:
   loadDefinition:
     enabled: true
+    existingSecret: load-definition
+    file: /app/load_definitions.json

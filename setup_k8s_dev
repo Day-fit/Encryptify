@@ -13,14 +13,12 @@ helm upgrade --install data helm/Data \
     --set global.postgresql.auth.postgresPassword="$DB_SU_PASSWORD" \
     --set global.postgresql.auth.database="$DB_NAME"
 
-if netstat -an | awk '$0 ~ /:5432([^0-9]|$)/' > /dev/null; then
-  echo "Port 5432 (PostgreSQL is probably running, skipping)"
-else
-  kubectl port-forward svc/data-postgresql 5432:5432 &
-fi
+helm upgrade --install communication helm/Communication \
+    --namespace communication \
+    --create-namespace \
+    --set rabbitmq.auth.username="$RABBITMQ_USER" \
+    --set rabbitmq.auth.password="$RABBITMQ_PASSWORD" \
+    --set rabbitmq.auth.su_username="$RABBITMQ_SU_USER" \
+    --set rabbitmq.auth.su_password="$RABBITMQ_SU_PASSWORD"
 
-#if netstat -an | awk '$0 ~ /:5672([^0-9]|$)/' > /dev/null; then
-#  echo "Port 5672 (RabbitMQ AMQP is probably running, skipping)"
-#else
-#  kubectl port-forward svc/data-postgresql 5432:5432 &
-#fi
+echo "To make cluster services work with local environment use 'telepresence connect --context=minikube' (if using minikube) command"
