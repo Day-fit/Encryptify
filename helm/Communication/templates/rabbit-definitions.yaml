@@ -58,7 +58,21 @@ stringData:
         {
           "source": "auth.rotation",
           "vhost": "/",
-          "destination": "service.*",
+          "destination": "service.core",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.encrypt",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.auth",
           "destination_type": "queue",
           "routing_key": "auth.key-changed"
         }
