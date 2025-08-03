@@ -4,6 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Day-fit/Encryptify</url>
+        </repository>
+    </distributionManagement>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -15,6 +23,9 @@
     <artifactId>encryptify-data</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <name>encryptify-data-lib</name>
+    <description>encryptify library that provides definitions of many JPA repositories, cache services, in order to reduce redundant code</description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -40,6 +51,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
     </dependencies>
 </project>
