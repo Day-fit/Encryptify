@@ -5,9 +5,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.mappers.FileUploadDtoMapper;
-import pl.dayfit.encryptifydata.cacheservices.DriveFileCacheService;
-import pl.dayfit.encryptifydata.entities.DriveFile;
-import pl.dayfit.encryptifydata.helpers.DriveFileAccessHelper;
+import pl.dayfit.encryptifydata.cacheservice.DriveFileCacheService;
+import pl.dayfit.encryptifydata.entity.DriveFile;
+import pl.dayfit.encryptifydata.helper.DriveFileAccessHelper;
 
 @Service
 @RequiredArgsConstructor

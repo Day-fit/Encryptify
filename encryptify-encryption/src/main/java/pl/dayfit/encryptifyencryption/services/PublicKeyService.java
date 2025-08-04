@@ -2,10 +2,10 @@ package pl.dayfit.encryptifyencryption.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifydata.cacheservices.DriveDirectoryCacheService;
-import pl.dayfit.encryptifydata.cacheservices.DriveFileCacheService;
-import pl.dayfit.encryptifydata.entities.DriveDirectory;
-import pl.dayfit.encryptifydata.entities.DriveFile;
+import pl.dayfit.encryptifydata.cacheservice.DriveDirectoryCacheService;
+import pl.dayfit.encryptifydata.cacheservice.DriveFileCacheService;
+import pl.dayfit.encryptifydata.entity.DriveDirectory;
+import pl.dayfit.encryptifydata.entity.DriveFile;
 import pl.dayfit.encryptifyencryption.dto.PublicKeyUploadDto;
 
 import java.util.function.Consumer;

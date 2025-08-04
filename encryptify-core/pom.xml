@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>pl.dayfit</groupId>
-            <artifactId>encryptify-data</artifactId>
+            <artifactId>encryptify-data-lib</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
