@@ -13,7 +13,7 @@ public class JwtRotationScheduler {
     private final JwtSecretRotationService jwtSecretRotationService;
     private final long ONE_DAY = 24 * 60 * 60 * 1000;
 
-    @Scheduled(fixedDelay = ONE_DAY)
+    @Scheduled(fixedRate = ONE_DAY)
     public void triggerRotation()
     {
         jwtSecretRotationService.generateNewSecretKey();
