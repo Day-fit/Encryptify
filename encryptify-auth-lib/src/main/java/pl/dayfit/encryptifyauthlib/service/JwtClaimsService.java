@@ -39,7 +39,7 @@ public class JwtClaimsService {
 
     public JwtTokenType getTokenType(String token)
     {
-        return extractClaims(token, claims -> claims.get("type", JwtTokenType.class));
+        return extractClaims(token, claims -> claims.get("tokenType", JwtTokenType.class));
     }
 
     public long getUserId(String token)
