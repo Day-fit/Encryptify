@@ -3,24 +3,24 @@ package pl.dayfit.encryptifyauthlib.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Locator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauthlib.dto.JwtRolesDTO;
-import pl.dayfit.encryptifyauthlib.keylocator.KeyLocator;
+import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
+import java.security.Key;
 import java.util.Collection;
 import java.util.Date;
 import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(value = "key-listener.enabled")
 public class JwtClaimsService {
-    private final KeyLocator keyLocator;
+    private final Locator<Key> keyLocator;
 
     public boolean isExpired(String token)
     {
@@ -35,6 +35,23 @@ public class JwtClaimsService {
                 .map(SimpleGrantedAuthority::new)
                 .toList()
         );
+    }
+
+    public JwtTokenType getTokenType(String token)
+    {
+        return extractClaims(token, claims -> claims.get("type", JwtTokenType.class));
+    }
+
+    public long getUserId(String token)
+    {
+         String rawId = extractClaims(token, Claims::getSubject);
+
+         if (rawId == null)
+         {
+             throw new BadCredentialsException("Invalid token");
+         }
+
+         return Long.parseLong(rawId);
     }
 
     private Date getExpirationDate(String token)

@@ -9,6 +9,8 @@ import pl.dayfit.encryptifyauth.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
 
 import java.security.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -21,6 +23,7 @@ public class JwtSecretRotationService {
     private int MAX_SECRET_KEYS_NUMBER;
 
     private PrivateKey privateKey;
+    private final Map<Integer, PublicKey> publicKeys = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init()
@@ -28,7 +31,7 @@ public class JwtSecretRotationService {
         MAX_SECRET_KEYS_NUMBER = cookieConfigurationProperties.getRefreshTokenValidityDays() + 1;
     }
 
-    public void generateNewSecretKey()
+    public synchronized void generateNewSecretKey()
     {
         PublicKey publicKey;
         int index = (currentSecretKey.get() + 1) % MAX_SECRET_KEYS_NUMBER;
@@ -44,6 +47,7 @@ public class JwtSecretRotationService {
         }
 
         currentSecretKey.set(index);
+        publicKeys.put(index, publicKey);
         applicationEventPublisher.publishEvent(new JwtKeyRotatedEvent(publicKey, index));
 
         log.info("Generated new secret key, new index: {}", index);
@@ -57,5 +61,10 @@ public class JwtSecretRotationService {
     public int getCurrentIndex()
     {
         return currentSecretKey.get();
+    }
+
+    public PublicKey getPublicKey(int index)
+    {
+        return publicKeys.get(index);
     }
 }

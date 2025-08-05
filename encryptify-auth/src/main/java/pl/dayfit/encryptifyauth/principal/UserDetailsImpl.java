@@ -1,5 +1,6 @@
 package pl.dayfit.encryptifyauth.principal;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +14,9 @@ public class UserDetailsImpl implements UserDetails {
     private final boolean isBanned;
     private final boolean isEnabled;
     private final Collection<? extends GrantedAuthority> authorities;
+
+    @Getter
+    private final long userId;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

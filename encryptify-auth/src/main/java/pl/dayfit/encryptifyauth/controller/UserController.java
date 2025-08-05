@@ -1,65 +1,62 @@
 package pl.dayfit.encryptifyauth.controller;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import pl.dayfit.encryptifyauth.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
+import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.service.JwtService;
 import pl.dayfit.encryptifyauth.service.UserService;
-import pl.dayfit.encryptifydata.cacheservice.UserCacheService;
+import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class UserController {
-    private final CookieConfigurationProperties cookieConfigurationProperties;
     private final UserService userService;
-    private final UserCacheService userCacheService;
     private final JwtService jwtService;
+    private final CookieConfigurationProperties configurationProperties;
 
-    private int accessTokenValidityMinutes;
     private int refreshTokenValidityDays;
     private String refreshTokenName;
+    private int accessTokenValidityMinutes;
     private String accessTokenName;
     private boolean isSecured;
 
     @PostConstruct
     private void init()
     {
-        accessTokenValidityMinutes = cookieConfigurationProperties.getAccessTokenValidityMinutes();
-        refreshTokenValidityDays = cookieConfigurationProperties.getRefreshTokenValidityDays();
-        refreshTokenName = cookieConfigurationProperties.getRefreshTokenName();
-        accessTokenName = cookieConfigurationProperties.getAccessTokenName();
-        isSecured = cookieConfigurationProperties.isSecured();
-
-        if (!isSecured)
-        {
-            log.warn("Using unsecured cookies is only acceptable in dev/test environment");
-        }
+        refreshTokenValidityDays =  configurationProperties.getRefreshTokenValidityDays();
+        refreshTokenName = configurationProperties.getRefreshTokenName();
+        accessTokenValidityMinutes = configurationProperties.getAccessTokenValidityMinutes();
+        accessTokenName = configurationProperties.getAccessTokenName();
+        isSecured = configurationProperties.isSecured();
     }
 
     @PostMapping("/api/v1/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto, ServletServerHttpResponse response)
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto, HttpServletResponse response)
     {
-        userService.handleLogin(dto);
-
-        long userId = userCacheService.getUserIdByIdentifier(dto.identifier());
+        long userId = userService.handleLogin(dto);
 
         ResponseCookie accessTokenCookie = ResponseCookie.from(
                     accessTokenName,
-                    jwtService.generateToken(userId, accessTokenValidityMinutes * 60 * 1000L)
+                    jwtService.generateToken(userId, accessTokenValidityMinutes * 60 * 1000L, JwtTokenType.ACCESS_TOKEN)
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -69,7 +66,7 @@ public class UserController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(
                     refreshTokenName,
-                    jwtService.generateToken(userId, refreshTokenValidityDays * 24 * 60 * 60 * 1000L)
+                    jwtService.generateToken(userId, refreshTokenValidityDays * 24 * 60 * 60 * 1000L,  JwtTokenType.REFRESH_TOKEN)
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -77,16 +74,21 @@ public class UserController {
                 .maxAge(Duration.ofDays(refreshTokenValidityDays))
                 .build();
 
-        response.getHeaders()
-                .add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-        response.getHeaders()
-                .add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         return ResponseEntity.ok(Map.of("message", "Login went successfully"));
     }
 
+    @PostMapping("/api/v1/register")
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequestDTO dto)
+    {
+        userService.handleRegister(dto);
+        return ResponseEntity.ok(Map.of("message", "Sign up successfully, email with confirmation link was sent to your email"));
+    }
+
     @PostMapping("/api/v1/logout")
-    public ResponseEntity<?> logout(ServletServerHttpResponse response)
+    public ResponseEntity<?> logout(HttpServletResponse response)
     {
         ResponseCookie accessToken = ResponseCookie.from(accessTokenName, "")
                 .httpOnly(true)
@@ -102,18 +104,36 @@ public class UserController {
                 .maxAge(0)
                 .build();
 
-        response.getHeaders()
-                .add(HttpHeaders.SET_COOKIE, accessToken.toString());
-
-        response.getHeaders()
-                .add(HttpHeaders.SET_COOKIE, refreshToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshToken.toString());
 
         return ResponseEntity.ok(Map.of("message", "Logout successfully"));
     }
 
     @PostMapping("/api/v1/refresh")
-    public ResponseEntity<?> refreshAccessToken(ServletServerHttpResponse response)
+    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response)
     {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies == null)
+        {
+            throw new BadCredentialsException("Missing cookie header");
+        }
+
+        Cookie refreshTokenCookie = Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals(refreshTokenName))
+                .findFirst()
+                .orElseThrow(() -> new BadCredentialsException("Could not find refresh token"));
+
+        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, userService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), refreshTokenValidityDays * 24 * 60 * 60 * 1000L))
+                .httpOnly(true)
+                .secure(isSecured)
+                .path("/")
+                .maxAge(Duration.ofMinutes(accessTokenValidityMinutes))
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+
+        return ResponseEntity.ok(Map.of("message", "Refresh went successfully"));
     }
 }
