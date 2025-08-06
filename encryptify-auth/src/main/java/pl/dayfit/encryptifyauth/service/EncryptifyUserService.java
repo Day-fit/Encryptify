@@ -78,6 +78,11 @@ public class EncryptifyUserService {
             throw new BadCredentialsException("Refresh token expired");
         }
 
+        if (jwtClaimsService.getTokenType(refreshToken) != JwtTokenType.REFRESH_TOKEN)
+        {
+            throw new BadCredentialsException("Given token is not an instance of refresh token");
+        }
+
         return jwtService.generateToken(username, validity, JwtTokenType.ACCESS_TOKEN);
     }
 
