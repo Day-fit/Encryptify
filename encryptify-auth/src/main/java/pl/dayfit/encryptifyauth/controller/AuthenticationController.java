@@ -127,7 +127,7 @@ public class AuthenticationController {
                 .findFirst()
                 .orElseThrow(() -> new BadCredentialsException("Could not find refresh token"));
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, encryptifyUserService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), refreshTokenValidityDays * 24 * 60 * 60 * 1000L))
+        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, encryptifyUserService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), accessTokenValidityMinutes * 60 * 1000L))
                 .httpOnly(true)
                 .secure(isSecured)
                 .path("/")

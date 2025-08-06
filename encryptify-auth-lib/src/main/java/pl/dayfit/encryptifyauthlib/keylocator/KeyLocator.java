@@ -18,7 +18,7 @@ public class KeyLocator implements Locator<Key> {
 
     @Override
     public Key locate(Header header) {
-        Integer secretKeyId = (Integer) header.get("sk-id");
+        Integer secretKeyId = (Integer) header.get("sk_id");
 
         if (secretKeyId == null)
         {
