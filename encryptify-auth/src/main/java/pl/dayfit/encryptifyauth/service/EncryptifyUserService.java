@@ -18,13 +18,12 @@ import pl.dayfit.encryptifyauth.token.UserDetailsTokenCandidate;
 import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class EncryptifyUserService {
     private final EncryptifyUserCacheService cacheService;
     private final UserRepository userRepository;
     private final UserDetailsAuthenticationProvider authenticationProvider;
@@ -35,13 +34,13 @@ public class UserService {
 
     /**
      * Handles login logic
-     * @return id of the user account
+     * @return username of the user account
      * @param dto DTO with account credentials
      */
-    public long handleLogin(LoginRequestDTO dto)
+    public String handleLogin(LoginRequestDTO dto)
     {
         UserDetailsToken token = (UserDetailsToken) authenticationProvider.authenticate(new UserDetailsTokenCandidate(dto.identifier(), dto.password()));
-        return token.getUserId();
+        return token.getName();
     }
 
     public void handleRegister(RegisterRequestDTO dto)
@@ -67,9 +66,9 @@ public class UserService {
 
     public String handleAccessTokenRefresh(String refreshToken, long validity)
     {
-        long id = jwtClaimsService.getUserId(refreshToken);
+        String username = jwtClaimsService.getSubject(refreshToken);
 
-        if(checkIfUserIsBanned(id))
+        if(checkIfUserIsBanned(username))
         {
             throw new BadCredentialsException("User is banned");
         }
@@ -79,11 +78,16 @@ public class UserService {
             throw new BadCredentialsException("Refresh token expired");
         }
 
-        return jwtService.generateToken(id, validity, JwtTokenType.ACCESS_TOKEN);
+        return jwtService.generateToken(username, validity, JwtTokenType.ACCESS_TOKEN);
     }
 
-    private boolean checkIfUserIsBanned(long userId) {
-        EncryptifyUser user = cacheService.getUserById(userId);
+    /**
+     * Method that checks if the user is banned or not
+     * @param username username of user to check
+     * @return true if user is banned, false otherwise
+     */
+    private boolean checkIfUserIsBanned(String username) {
+        EncryptifyUser user = cacheService.getUserByUsername(username);
         return user.isBanned();
     }
 }

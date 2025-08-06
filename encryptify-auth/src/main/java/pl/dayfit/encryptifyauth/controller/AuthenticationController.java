@@ -18,7 +18,8 @@ import pl.dayfit.encryptifyauth.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.service.JwtService;
-import pl.dayfit.encryptifyauth.service.UserService;
+import pl.dayfit.encryptifyauth.service.EncryptifyUserService;
+import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.time.Duration;
@@ -28,10 +29,11 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class UserController {
-    private final UserService userService;
+public class AuthenticationController {
+    private final EncryptifyUserService encryptifyUserService;
     private final JwtService jwtService;
     private final CookieConfigurationProperties configurationProperties;
+    private final JwtConfigurationProperties jwtConfigurationProperties;
 
     private int refreshTokenValidityDays;
     private String refreshTokenName;
@@ -42,21 +44,21 @@ public class UserController {
     @PostConstruct
     private void init()
     {
-        refreshTokenValidityDays =  configurationProperties.getRefreshTokenValidityDays();
-        refreshTokenName = configurationProperties.getRefreshTokenName();
-        accessTokenValidityMinutes = configurationProperties.getAccessTokenValidityMinutes();
-        accessTokenName = configurationProperties.getAccessTokenName();
+        refreshTokenValidityDays =  jwtConfigurationProperties.getRefreshTokenValidityDays();
+        refreshTokenName = jwtConfigurationProperties.getRefreshTokenName();
+        accessTokenValidityMinutes = jwtConfigurationProperties.getAccessTokenValidityMinutes();
+        accessTokenName = jwtConfigurationProperties.getAccessTokenName();
         isSecured = configurationProperties.isSecured();
     }
 
     @PostMapping("/api/v1/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto, HttpServletResponse response)
     {
-        long userId = userService.handleLogin(dto);
+        String username = encryptifyUserService.handleLogin(dto);
 
         ResponseCookie accessTokenCookie = ResponseCookie.from(
                     accessTokenName,
-                    jwtService.generateToken(userId, accessTokenValidityMinutes * 60 * 1000L, JwtTokenType.ACCESS_TOKEN)
+                    jwtService.generateToken(username, accessTokenValidityMinutes * 60 * 1000L, JwtTokenType.ACCESS_TOKEN)
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -66,7 +68,7 @@ public class UserController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(
                     refreshTokenName,
-                    jwtService.generateToken(userId, refreshTokenValidityDays * 24 * 60 * 60 * 1000L,  JwtTokenType.REFRESH_TOKEN)
+                    jwtService.generateToken(username, refreshTokenValidityDays * 24 * 60 * 60 * 1000L,  JwtTokenType.REFRESH_TOKEN)
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -83,7 +85,7 @@ public class UserController {
     @PostMapping("/api/v1/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequestDTO dto)
     {
-        userService.handleRegister(dto);
+        encryptifyUserService.handleRegister(dto);
         return ResponseEntity.ok(Map.of("message", "Sign up successfully, email with confirmation link was sent to your email"));
     }
 
@@ -125,7 +127,7 @@ public class UserController {
                 .findFirst()
                 .orElseThrow(() -> new BadCredentialsException("Could not find refresh token"));
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, userService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), refreshTokenValidityDays * 24 * 60 * 60 * 1000L))
+        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, encryptifyUserService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), refreshTokenValidityDays * 24 * 60 * 60 * 1000L))
                 .httpOnly(true)
                 .secure(isSecured)
                 .path("/")

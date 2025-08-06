@@ -42,16 +42,16 @@ public class JwtClaimsService {
         return extractClaims(token, claims -> claims.get("type", JwtTokenType.class));
     }
 
-    public long getUserId(String token)
+    public String getSubject(String token)
     {
-         String rawId = extractClaims(token, Claims::getSubject);
+         String subject = extractClaims(token, Claims::getSubject);
 
-         if (rawId == null)
+         if (subject == null ||  subject.isBlank())
          {
              throw new BadCredentialsException("Invalid token");
          }
 
-         return Long.parseLong(rawId);
+         return subject;
     }
 
     private Date getExpirationDate(String token)

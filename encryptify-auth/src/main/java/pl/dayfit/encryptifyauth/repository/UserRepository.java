@@ -14,4 +14,6 @@ public interface UserRepository extends JpaRepository<EncryptifyUser, Long> {
     boolean existsByUsername(String username);
     boolean existsByEmailHashLookup(String lookup);
     Optional<List<EncryptifyUser>> findAllByEmailHashLookup(String lookup);
+
+    void deleteByUsername(String username);
 }

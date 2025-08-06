@@ -3,13 +3,12 @@ package pl.dayfit.encryptifyauthlib.token;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
-import java.security.Principal;
 import java.util.Collection;
 
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
-    private final Principal principal;
+    private final Object principal;
 
-    public JwtAuthenticationToken(Collection<? extends GrantedAuthority> roles, Principal principal) {
+    public JwtAuthenticationToken(Collection<? extends GrantedAuthority> roles, Object principal) {
         super(roles);
         this.principal = principal;
         setAuthenticated(true);

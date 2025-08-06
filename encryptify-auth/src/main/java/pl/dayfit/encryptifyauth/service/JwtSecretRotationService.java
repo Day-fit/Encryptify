@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifyauth.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
+import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
 
 import java.security.*;
 import java.util.Map;
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 @RequiredArgsConstructor
 public class JwtSecretRotationService {
-    private final CookieConfigurationProperties cookieConfigurationProperties;
+    private final JwtConfigurationProperties jwtConfigurationProperties;
     private final AtomicInteger currentSecretKey = new AtomicInteger(-1);
     private final ApplicationEventPublisher applicationEventPublisher;
     private int MAX_SECRET_KEYS_NUMBER;
@@ -28,7 +28,7 @@ public class JwtSecretRotationService {
     @PostConstruct
     private void init()
     {
-        MAX_SECRET_KEYS_NUMBER = cookieConfigurationProperties.getRefreshTokenValidityDays() + 1;
+        MAX_SECRET_KEYS_NUMBER = jwtConfigurationProperties.getRefreshTokenValidityDays() + 1;
     }
 
     public synchronized void generateNewSecretKey()

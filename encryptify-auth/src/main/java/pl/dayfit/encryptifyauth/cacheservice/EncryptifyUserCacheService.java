@@ -1,6 +1,8 @@
 package pl.dayfit.encryptifyauth.cacheservice;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,6 +24,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class EncryptifyUserCacheService {
     private final UserRepository userRepository;
+    private final CacheManager cacheManager;
 
     @Cacheable(key = "#username", value = "user.username")
     public EncryptifyUser getUserByUsername(String username)
@@ -43,13 +46,6 @@ public class EncryptifyUserCacheService {
                 .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
     }
 
-    @Cacheable(key = "#id", value = "user.id")
-    public EncryptifyUser getUserById(long id)
-    {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
-    }
-
     @Caching(
             put = {
                     @CachePut(key = "#result.username", value = "user.username"),
@@ -62,6 +58,37 @@ public class EncryptifyUserCacheService {
         return userRepository.save(user);
     }
 
+    /**
+     * Deletes user by id from database and cache
+     * @param username username of user you want to remove
+     */
+    public void deleteUserByUsername(String username)
+    {
+        EncryptifyUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("User with id " + username + " not found"));
+
+        userRepository.deleteByUsername(username);
+
+        Cache usernameCache = cacheManager.getCache("user.username");
+        Cache emailCache = cacheManager.getCache("user.lookup");
+        Cache idCache = cacheManager.getCache("user.id");
+
+        if (usernameCache != null)
+        {
+            usernameCache.evict(user.getUsername());
+        }
+
+        if (emailCache != null)
+        {
+            emailCache.evict(user.getEmailHashLookup());
+        }
+
+        if (idCache != null)
+        {
+            idCache.evict(user.getId());
+        }
+    }
+
     @Caching(
             evict = {
                     @CacheEvict(key = "#user.username", value = "user.username"),
@@ -69,6 +96,7 @@ public class EncryptifyUserCacheService {
                     @CacheEvict(key = "#user.id", value = "user.id")
             }
     )
+    @SuppressWarnings("unused")
     public void deleteUser(EncryptifyUser user)
     {
         userRepository.delete(user);

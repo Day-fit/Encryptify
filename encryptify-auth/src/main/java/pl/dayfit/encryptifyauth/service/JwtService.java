@@ -20,9 +20,9 @@ public class JwtService {
     private final JwtSecretRotationService jwtSecretRotationService;
     private final EncryptifyUserCacheService encryptifyUserCacheService;
 
-    public String generateToken(long id, long expiration, JwtTokenType tokenType)
+    public String generateToken(String username, long expiration, JwtTokenType tokenType)
     {
-        EncryptifyUser user = encryptifyUserCacheService.getUserById(id);
+        EncryptifyUser user = encryptifyUserCacheService.getUserByUsername(username);
 
         Map<String, Object> claims = new HashMap<>();
 
@@ -35,7 +35,7 @@ public class JwtService {
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .issuedAt(new Date())
                 .claims(claims)
-                .subject(String.valueOf(id))
+                .subject(user.getUsername())
                 .header()
                 .add("sk_id", jwtSecretRotationService.getCurrentIndex())
                 .and()

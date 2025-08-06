@@ -1,4 +1,4 @@
-package pl.dayfit.encryptifyauth.principal;
+package pl.dayfit.encryptifyauthlib.principal;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

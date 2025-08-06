@@ -1,5 +1,6 @@
 package pl.dayfit.encryptifyauth.exceptionhandler;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -10,11 +11,14 @@ import pl.dayfit.encryptifyauth.exception.UserAlreadyExistsException;
 import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<?> handleUserAlreadyExistsException(UserAlreadyExistsException ex)
     {
+        log.debug("User tried to create account with username or email that already exists {}", ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 Map.of("message",
                         ex.getMessage())
@@ -24,6 +28,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex)
     {
+        log.debug("An access has been denied for user {}", ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
                 Map.of("message",
                         ex.getMessage())
@@ -33,6 +39,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<?> handleAuthenticationException(AuthenticationException ex)
     {
+        log.debug("An authentication exception occurred for user {}", ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 Map.of("message",
                         ex.getMessage())
@@ -41,6 +49,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException() {
+        log.warn("An unexpected error occurred while processing the request");
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 Map.of("message",
                         "Internal Server Error, Please contact the developer")

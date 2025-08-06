@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.helper.HashHelper;
-import pl.dayfit.encryptifyauth.principal.UserDetailsImpl;
+import pl.dayfit.encryptifyauthlib.principal.UserDetailsImpl;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
 
