@@ -8,13 +8,10 @@ COPY ./.mvn /app/.mvn
 COPY ./mvnw /app/mvnw
 
 COPY ./encryptify-encryption /app/encryptify-encryption
-COPY ./encryptify-data /app/encryptify-data
 WORKDIR /app
 
 # Compile source code
 RUN \
-    cd /app/encryptify-data && \
-    ../mvnw clean install -DskipTests && \
     cd /app/encryptify-encryption && \
     ../mvnw package -DskipTests && \
     mv /app/encryptify-encryption/target/encryptify-encryption-*.jar /app/encryption.jar

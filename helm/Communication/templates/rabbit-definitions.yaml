@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: load-definition
+stringData:
+  load_definitions.json: |-
+    {
+      "users": [
+        {
+          "name": "{{ .Values.rabbitmq.auth.su_username }}",
+          "password": "{{ .Values.rabbitmq.auth.su_password }}",
+          "tags": "administrator"
+        },
+        {
+          "name": "{{ .Values.rabbitmq.auth.username }}",
+          "password": "{{ .Values.rabbitmq.auth.password }}",
+          "tags": "application"
+        }
+      ],
+      "vhosts": [
+        { "name": "/" }
+      ],
+      "permissions": [
+        {
+          "user": "{{ .Values.rabbitmq.auth.username }}",
+          "vhost": "/",
+          "configure": "",
+          "write": ".*",
+          "read": ".*"
+        },
+        {
+          "user": "{{ .Values.rabbitmq.auth.su_username }}",
+          "vhost": "/",
+          "configure": "",
+          "write": ".*",
+          "read": ".*"
+        }
+      ],
+      "queues": [
+        { "name": "service.core", "vhost": "/", "durable": true },
+        { "name": "service.encrypt", "vhost": "/",  "durable": true },
+        { "name": "service.auth", "vhost": "/", "durable": true },
+        { "name": "service.email", "vhost": "/", "durable": true }
+      ],
+      "exchanges": [
+        { "name": "user.events", "vhost": "/", "type": "topic", "durable": true },
+        { "name": "auth.rotation", "vhost": "/", "type": "topic", "durable": true }
+      ],
+      "bindings": [
+        {
+          "source": "user.events",
+          "vhost": "/",
+          "destination": "service.email",
+          "destination_type": "queue",
+          "routing_key": "user.created"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.core",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.encrypt",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.auth",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        }
+      ]
+    }

@@ -2,10 +2,11 @@ package pl.dayfit.encryptifycore.mappers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pl.dayfit.encryptifydata.cacheservices.UserCacheService;
+import pl.dayfit.encryptifycore.configurations.FilesConfigurationProperties;
+import pl.dayfit.encryptifydata.cacheservice.UserCacheService;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.dto.FileResponseDto;
-import pl.dayfit.encryptifydata.entities.DriveFile;
+import pl.dayfit.encryptifydata.entity.DriveFile;
 
 import java.time.Instant;
 import java.util.Base64;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     private final UserCacheService cacheService;
+    private final FilesConfigurationProperties filesConfigurationProperties;
 
     @Override
     public DriveFile toDestination(FileRequestDto fileRequestDto, String uploadedBy) {
@@ -23,7 +25,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setUuid(UUID.randomUUID());
         driveFile.setName(fileRequestDto.name());
         driveFile.setContent(Base64.getDecoder().decode(fileRequestDto.base64Content()));
-        driveFile.setUploadedBy(cacheService.getUserByUsername(uploadedBy));
+        driveFile.setUploader(cacheService.getUserByUsername(uploadedBy));
         driveFile.setUploadDate(Instant.now());
 
         return driveFile;
@@ -33,7 +35,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     public FileResponseDto toResponseDto(DriveFile driveFile) {
         return new FileResponseDto(
                 driveFile.getName(),
-                driveFile.getUploadedBy().getUsername(),
+                driveFile.getUploader().getUsername(),
                 Base64.getEncoder().encodeToString(driveFile.getContent()),
                 driveFile.getUploadDate()
         );
