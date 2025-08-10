@@ -2,7 +2,6 @@ package pl.dayfit.encryptifyauth.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
@@ -43,6 +42,11 @@ public class EncryptifyUserService {
         return token.getName();
     }
 
+    /**
+     * Handles the registration logic
+     * @param dto dto with register credentials
+     * @throws UserAlreadyExistsException if user with given username or email already exists
+     */
     public void handleRegister(RegisterRequestDTO dto)
     {
         if(userRepository.existsByEmailHashLookup(dto.email()) || userRepository.existsByUsername(dto.username()))
@@ -59,11 +63,17 @@ public class EncryptifyUserService {
                         Instant.now(),
                         false,
                         false,
-                        List.of(new SimpleGrantedAuthority("USER"))
+                        List.of("USER")
                 )
         );
     }
 
+    /**
+     * Generates access token with set validity if refresh token is valid
+     * @param refreshToken potential refresh token content
+     * @param validity time given in millis that describe how long generated token will be valid
+     * @return string form of jwt access token
+     */
     public String handleAccessTokenRefresh(String refreshToken, long validity)
     {
         String username = jwtClaimsService.getSubject(refreshToken);

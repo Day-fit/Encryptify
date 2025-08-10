@@ -1,6 +1,7 @@
 package pl.dayfit.encryptifyauth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +34,10 @@ public class EncryptifyUserDetailsService implements org.springframework.securit
                 user.getPassword(),
                 user.isBanned(),
                 user.isEnabled(),
-                user.getRoles(),
+                user.getRoles()
+                        .stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .toList(),
                 user.getId()
         );
     }

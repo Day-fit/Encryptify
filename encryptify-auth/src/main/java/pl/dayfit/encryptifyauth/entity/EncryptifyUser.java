@@ -37,5 +37,5 @@ public class EncryptifyUser {
     private boolean isEnabled = false;
 
     @Column(nullable = false)
-    private List<GrantedAuthority> roles;
+    private List<String> roles;
 }

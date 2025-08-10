@@ -4,7 +4,6 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifyauthlib.dto.JwtRolesDTO;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
@@ -26,7 +25,7 @@ public class JwtService {
 
         Map<String, Object> claims = new HashMap<>();
 
-        claims.put("roles", new JwtRolesDTO(user.getRoles().stream().map(GrantedAuthority::getAuthority).toList()));
+        claims.put("roles", user.getRoles());
         claims.put("tokenType", tokenType.toString());
 
         return Jwts.builder()

@@ -9,12 +9,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifyauthlib.dto.JwtRolesDTO;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.security.Key;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 @Service
@@ -29,11 +30,12 @@ public class JwtClaimsService {
 
     public Collection<? extends GrantedAuthority> getRoles(String token)
     {
-        return extractClaims(token, claims -> claims.get("roles", JwtRolesDTO.class)
-                .roles()
-                .stream()
-                .map(SimpleGrantedAuthority::new)
-                .toList()
+        return extractClaims(token, claims ->
+                ((List<?>) claims.get("roles", List.class))
+                        .stream()
+                        .map(Objects::toString)
+                        .map(SimpleGrantedAuthority::new)
+                        .toList()
         );
     }
 
