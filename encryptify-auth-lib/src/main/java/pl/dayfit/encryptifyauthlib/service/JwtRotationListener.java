@@ -1,21 +1,26 @@
 package pl.dayfit.encryptifyauthlib.service;
 
+import com.rabbitmq.client.Channel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauthlib.dto.PublicKeyRotationDTO;
 
+import java.io.IOException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Service
 @ConditionalOnBooleanProperty(value = "key-listener.enabled")
 @SuppressWarnings("unused")
@@ -23,18 +28,32 @@ public class JwtRotationListener {
     private final AtomicInteger currentIndex = new AtomicInteger(0);
     private final ConcurrentHashMap<Integer, PublicKey> secretKeys = new ConcurrentHashMap<>();
 
-    @RabbitListener(queues = "${service.name}")
-    public void handleKeyRotation(PublicKeyRotationDTO keyRotationDTO) {
+    /**
+     * Handles receiving public keys from `auth` microservice
+     * @param keyRotationDTO dto that represent public key
+     */
+    @RabbitListener(queues = "service.${service.name}")
+    public void handleKeyRotation(PublicKeyRotationDTO keyRotationDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         try
         {
             KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
             byte[] decodedKeyBytes = Base64.getDecoder().decode(keyRotationDTO.encodedKey());
-            KeySpec keySpec = new PKCS8EncodedKeySpec(decodedKeyBytes);
+            KeySpec keySpec = new X509EncodedKeySpec(decodedKeyBytes);
 
             secretKeys.put(keyRotationDTO.keyId(), keyFactory.generatePublic(keySpec));
             currentIndex.set(keyRotationDTO.keyId());
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new RuntimeException(e);
+
+            log.info("Key rotation success. New key index: {}", currentIndex.get());
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Invalid algorithm was specified in a code.", e);
+        } catch (Exception e) {
+            log.error("{}, NACKing message", e.getMessage());
+
+            try {
+                channel.basicNack(tag, false, true);
+            } catch (IOException ioE) {
+                throw new RuntimeException(ioE);
+            }
         }
     }
 

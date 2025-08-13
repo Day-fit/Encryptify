@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication(scanBasePackages =
         {
                 "pl.dayfit.encryptifyauth",
-                "pl.dayfit.encryptifydata",
                 "pl.dayfit.encryptifyauthlib"
         })
 public class EncryptifyAuthApplication {

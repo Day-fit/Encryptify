@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties("jwt")
+@ConfigurationProperties(prefix = "jwt")
 public class JwtConfigurationProperties {
     private String accessTokenName;
     private String refreshTokenName;
