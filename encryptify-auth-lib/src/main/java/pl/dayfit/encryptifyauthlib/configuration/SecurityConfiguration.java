@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import pl.dayfit.encryptifyauthlib.entrypoint.EncryptifyAuthenticationEntrypoint;
 import pl.dayfit.encryptifyauthlib.filter.JwtFilter;
 
 @Configuration
@@ -22,6 +23,7 @@ import pl.dayfit.encryptifyauthlib.filter.JwtFilter;
 public class SecurityConfiguration {
     private final SecurityConfigurationProperties securityConfigurationProperties;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final EncryptifyAuthenticationEntrypoint authenticationEntrypoint;
     private final JwtFilter jwtFilter;
 
     @Bean
@@ -32,10 +34,11 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers(securityConfigurationProperties.getSecuredPaths().toArray(new String[0])).authenticated()
+                                .requestMatchers(securityConfigurationProperties.getSecuredEndpoints().toArray(new String[0])).authenticated()
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(handler -> handler.authenticationEntryPoint(authenticationEntrypoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

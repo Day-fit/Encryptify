@@ -25,6 +25,13 @@ public class KeyLocator implements Locator<Key> {
             throw new BadCredentialsException("Given JWT token is invalid");
         }
 
-        return jwtRotationListener.getSecretKey(secretKeyId);
+        Key key = jwtRotationListener.getSecretKey(secretKeyId);
+
+        if (key == null)
+        {
+            throw new BadCredentialsException("Given JWT token is invalid");
+        }
+
+        return key;
     }
 }

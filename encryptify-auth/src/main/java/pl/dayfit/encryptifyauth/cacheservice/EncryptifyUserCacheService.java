@@ -1,5 +1,6 @@
 package pl.dayfit.encryptifyauth.cacheservice;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -30,7 +31,7 @@ public class EncryptifyUserCacheService {
     public EncryptifyUser getUserByUsername(String username)
     {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Account does not exist or password does not match"));
     }
 
     /**
@@ -43,7 +44,7 @@ public class EncryptifyUserCacheService {
     public List<EncryptifyUser> getUserByEmailLookup(String lookup) //NOTE: Caching is safe because we are using only lookup (not a raw form)
     {
         return userRepository.findAllByEmailHashLookup(lookup)
-                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Account does not exist or password does not match"));
     }
 
     @Caching(
@@ -62,6 +63,7 @@ public class EncryptifyUserCacheService {
      * Deletes user by id from database and cache
      * @param username username of user you want to remove
      */
+    @Transactional
     public void deleteUserByUsername(String username)
     {
         EncryptifyUser user = userRepository.findByUsername(username)

@@ -34,5 +34,8 @@ public class DriveFile {
     @ManyToOne(fetch = FetchType.LAZY)
     private DriveDirectory parent;
 
+    @Column(nullable = false)
+    private String path;
+
     private String publicKey;
 }

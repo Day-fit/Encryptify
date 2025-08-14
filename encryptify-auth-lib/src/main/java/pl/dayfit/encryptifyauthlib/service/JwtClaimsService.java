@@ -41,7 +41,9 @@ public class JwtClaimsService {
 
     public JwtTokenType getTokenType(String token)
     {
-        return extractClaims(token, claims -> claims.get("tokenType", JwtTokenType.class));
+        return JwtTokenType.valueOf(
+                extractClaims(token, claims -> claims.get("tokenType", String.class))
+        );
     }
 
     public String getSubject(String token)

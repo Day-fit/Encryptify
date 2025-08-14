@@ -62,7 +62,7 @@
         <dependency>
             <groupId>pl.dayfit</groupId>
             <artifactId>encryptify-auth-lib</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1.2</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

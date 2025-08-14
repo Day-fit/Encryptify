@@ -20,7 +20,7 @@
 
     <groupId>pl.dayfit</groupId>
     <artifactId>encryptify-auth-lib</artifactId>
-    <version>0.0.1.1</version>
+    <version>0.0.1.2</version>
 
     <name>encryptify-auth-lib</name>
     <description>Encryptify library that provides authentication related components, such as authentication providers, security configurations, security filters</description>

@@ -3,12 +3,12 @@ package pl.dayfit.encryptifyauth.exceptionhandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.dayfit.encryptifyauth.exception.UserAlreadyExistsException;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @Slf4j
@@ -48,8 +48,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException() {
-        log.warn("An unexpected error occurred while processing the request");
+    public ResponseEntity<?> handleException(Exception ex) {
+        log.error("An unexpected error occurred while processing the request. {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 Map.of("message",

@@ -60,6 +60,6 @@ public class EncryptifyUserDetailsService implements org.springframework.securit
         return users.stream()
                 .filter(user -> passwordEncoder.matches(rawEmail, user.getEmailProof()))
                 .findFirst()
-                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Account does not exist or password does not match"));
     }
 }

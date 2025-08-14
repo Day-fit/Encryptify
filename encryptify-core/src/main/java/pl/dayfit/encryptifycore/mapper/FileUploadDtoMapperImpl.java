@@ -2,7 +2,6 @@ package pl.dayfit.encryptifycore.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pl.dayfit.encryptifycore.configuration.FilesConfigurationProperties;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.dto.FileResponseDto;
 import pl.dayfit.encryptifycore.entity.DriveFile;
@@ -14,10 +13,9 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
-    private final FilesConfigurationProperties filesConfigurationProperties;
 
     @Override
-    public DriveFile toDestination(FileRequestDto fileRequestDto, String uploader) {
+    public DriveFile toDestination(FileRequestDto fileRequestDto, String uploader, String filePath) {
         DriveFile driveFile = new DriveFile();
 
         driveFile.setUuid(UUID.randomUUID());
@@ -25,6 +23,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setContent(Base64.getDecoder().decode(fileRequestDto.base64Content()));
         driveFile.setUploader(uploader);
         driveFile.setUploadDate(Instant.now());
+        driveFile.setPath(filePath);
 
         return driveFile;
     }

@@ -10,6 +10,6 @@ import java.util.List;
 @Getter
 @ConfigurationProperties(prefix = "security")
 public class SecurityConfigurationProperties {
-    private List<String> securedPaths;
+    private List<String> securedEndpoints;
     private List<String> allowedOriginsPatterns;
 }

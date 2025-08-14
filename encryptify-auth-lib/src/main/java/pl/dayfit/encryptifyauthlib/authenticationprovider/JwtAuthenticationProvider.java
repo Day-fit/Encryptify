@@ -6,6 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
+import pl.dayfit.encryptifyauthlib.principal.UserPrincipal;
 import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 import pl.dayfit.encryptifyauthlib.token.JwtAuthenticationToken;
 import pl.dayfit.encryptifyauthlib.token.JwtAuthenticationTokenCandidate;
@@ -26,12 +27,16 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
 
         return new JwtAuthenticationToken(
                 jwtClaimsService.getRoles(accessToken),
-                jwtClaimsService.getSubject(accessToken)
+                new UserPrincipal(
+                        jwtClaimsService.getSubject(accessToken)
+                )
         );
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return JwtAuthenticationTokenCandidate.class.isAssignableFrom(authentication);
+        return JwtAuthenticationTokenCandidate
+                .class
+                .isAssignableFrom(authentication);
     }
 }

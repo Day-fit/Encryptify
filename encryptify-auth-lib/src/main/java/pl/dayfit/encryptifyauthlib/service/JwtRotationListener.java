@@ -33,9 +33,8 @@ public class JwtRotationListener {
      * @param keyRotationDTO dto that represent public key
      */
     @RabbitListener(queues = "service.${service.name}")
-    public void handleKeyRotation(PublicKeyRotationDTO keyRotationDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
-        try
-        {
+    private void handleKeyRotation(PublicKeyRotationDTO keyRotationDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
+        try {
             KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
             byte[] decodedKeyBytes = Base64.getDecoder().decode(keyRotationDTO.encodedKey());
             KeySpec keySpec = new X509EncodedKeySpec(decodedKeyBytes);

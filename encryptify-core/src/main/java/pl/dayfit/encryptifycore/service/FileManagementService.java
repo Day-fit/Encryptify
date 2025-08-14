@@ -3,6 +3,8 @@ package pl.dayfit.encryptifycore.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import pl.dayfit.encryptifycore.configuration.FilesConfigurationProperties;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.mapper.FileUploadDtoMapper;
 import pl.dayfit.encryptifycore.cacheservice.DriveFileCacheService;
@@ -15,10 +17,24 @@ public class FileManagementService {
     private final DriveFileAccessHelper accessHelper;
     private final DriveFileCacheService driveFileCacheService;
     private final FileUploadDtoMapper fileUploadDtoMapper;
+    private final FilesConfigurationProperties filesConfigurationProperties;
+
+    private String savePath;
+
+    @PostMapping
+    private void init()
+    {
+        savePath = filesConfigurationProperties.getSavePath();
+    }
 
     public void handleFileUpload(FileRequestDto fileRequestDto, String uploader)
     {
-        DriveFile file = fileUploadDtoMapper.toDestination(fileRequestDto, uploader);
+        DriveFile file = fileUploadDtoMapper.toDestination(
+                fileRequestDto,
+                uploader,
+                savePath
+        );
+
         driveFileCacheService.save(file);
     }
 
