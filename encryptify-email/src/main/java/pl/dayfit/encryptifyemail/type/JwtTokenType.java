@@ -1,4 +1,4 @@
-package pl.dayfit.encryptifyauthlib.type;
+package pl.dayfit.encryptifyemail.type;
 
 public enum JwtTokenType {
     ACCESS_TOKEN,

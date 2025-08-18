@@ -17,17 +17,14 @@ public class CommunicationService {
     @EventListener
     public void handleJwtKeyRotatedEvent(JwtKeyRotatedEvent event)
     {
-        String AUTH_ROTATION_EXCHANGE_NAME = "auth.rotation";
-        String AUTH_ROTATION_ROUTING_KEY = "auth.key-changed";
-
         PublicKeyRotationDTO dto = new PublicKeyRotationDTO(
                 Base64.getEncoder().encode(event.key().getEncoded()),
                 event.keyId()
         );
 
         rabbitTemplate.convertAndSend(
-                AUTH_ROTATION_EXCHANGE_NAME,
-                AUTH_ROTATION_ROUTING_KEY,
+                "auth.rotation",
+                "auth.key-changed",
                 dto
         );
     }

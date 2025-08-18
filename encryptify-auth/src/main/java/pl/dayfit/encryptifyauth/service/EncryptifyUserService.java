@@ -1,14 +1,18 @@
 package pl.dayfit.encryptifyauth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
+import pl.dayfit.encryptifyauth.configuration.EmailConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
+import pl.dayfit.encryptifyauth.event.UserRegisteredEvent;
 import pl.dayfit.encryptifyauth.exception.UserAlreadyExistsException;
 import pl.dayfit.encryptifyauth.helper.HashHelper;
 import pl.dayfit.encryptifyauth.repository.UserRepository;
@@ -30,6 +34,8 @@ public class EncryptifyUserService {
     private final JwtClaimsService jwtClaimsService;
     private final JwtService jwtService;
     private final HashHelper hashHelper;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final EmailConfigurationProperties emailConfigurationProperties;
 
     /**
      * Handles login logic
@@ -47,6 +53,7 @@ public class EncryptifyUserService {
      * @param dto dto with register credentials
      * @throws UserAlreadyExistsException if user with given username or email already exists
      */
+    @Transactional
     public void handleRegister(RegisterRequestDTO dto)
     {
         if(userRepository.existsByEmailHashLookup(dto.email()) || userRepository.existsByUsername(dto.username()))
@@ -54,7 +61,8 @@ public class EncryptifyUserService {
             throw new UserAlreadyExistsException("User already exists");
         }
 
-        cacheService.saveUser(new EncryptifyUser(
+        cacheService
+                .saveUser(new EncryptifyUser(
                         null,
                         passwordEncoder.encode(dto.email()),
                         hashHelper.generateEmailLookup( dto.email()),
@@ -63,9 +71,26 @@ public class EncryptifyUserService {
                         Instant.now(),
                         false,
                         false,
-                        List.of("USER")
+                        List.of("USER"),
+                        null
                 )
         );
+
+        applicationEventPublisher
+            .publishEvent(
+                new UserRegisteredEvent
+                    (
+                        dto.username(),
+                        dto.email(),
+                        jwtService
+                            .generateToken
+                                (
+                                    dto.username(),
+                                    emailConfigurationProperties.getVerificationTokenValidityMinutes() * 60 * 1000,
+                                        JwtTokenType.EMAIL_VERIFICATION
+                                )
+                    )
+            );
     }
 
     /**

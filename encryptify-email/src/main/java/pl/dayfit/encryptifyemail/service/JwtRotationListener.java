@@ -1,13 +1,12 @@
-package pl.dayfit.encryptifyauthlib.service;
+package pl.dayfit.encryptifyemail.service;
 
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifyauthlib.dto.PublicKeyRotationDTO;
+import pl.dayfit.encryptifyemail.dto.PublicKeyRotationDTO;
 
 import java.io.IOException;
 import java.security.Key;
@@ -22,8 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
-@ConditionalOnBooleanProperty(value = "key-listener.enabled")
-@SuppressWarnings("unused")
 public class JwtRotationListener {
     private final AtomicInteger currentIndex = new AtomicInteger(0);
     private final ConcurrentHashMap<Integer, PublicKey> secretKeys = new ConcurrentHashMap<>();
@@ -32,7 +29,7 @@ public class JwtRotationListener {
      * Handles receiving public keys from `auth` microservice
      * @param keyRotationDTO dto that represent public key
      */
-    @RabbitListener(queues = "service.${service.name}")
+    @RabbitListener(queues = "service.email")
     private void handleKeyRotation(PublicKeyRotationDTO keyRotationDTO, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
@@ -59,10 +56,5 @@ public class JwtRotationListener {
     public Key getSecretKey(int keyId)
     {
         return secretKeys.get(keyId);
-    }
-
-    public Integer getCurrentIndex()
-    {
-        return currentIndex.get();
     }
 }

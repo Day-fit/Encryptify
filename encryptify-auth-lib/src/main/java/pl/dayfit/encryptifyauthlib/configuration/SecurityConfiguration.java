@@ -16,6 +16,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import pl.dayfit.encryptifyauthlib.entrypoint.EncryptifyAuthenticationEntrypoint;
 import pl.dayfit.encryptifyauthlib.filter.JwtFilter;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -29,12 +31,16 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
+        List<String> securedEndpoints = securityConfigurationProperties.getSecuredEndpoints();
+        securedEndpoints = securedEndpoints == null ? List.of() : securedEndpoints;
+
+        List<String> finalSecuredEndpoints = securedEndpoints;
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers(securityConfigurationProperties.getSecuredEndpoints().toArray(new String[0])).authenticated()
+                                .requestMatchers(finalSecuredEndpoints.toArray(new String[0])).authenticated()
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

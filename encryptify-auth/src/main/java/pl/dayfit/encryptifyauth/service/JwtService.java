@@ -2,7 +2,6 @@ package pl.dayfit.encryptifyauth.service;
 
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
@@ -19,6 +18,13 @@ public class JwtService {
     private final JwtSecretRotationService jwtSecretRotationService;
     private final EncryptifyUserCacheService encryptifyUserCacheService;
 
+    /**
+     * Generates JWT token based on parameters
+     * @param username subject username
+     * @param expiration token validity time (millis)
+     * @param tokenType enum that represents token type
+     * @return generated token
+     */
     public String generateToken(String username, long expiration, JwtTokenType tokenType)
     {
         EncryptifyUser user = encryptifyUserCacheService.getUserByUsername(username);
