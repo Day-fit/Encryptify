@@ -1,5 +1,5 @@
 #!/bin/bash
-[ -f .env ] || exit 1
+[ -f .env ] || echo "To run this script the env file is required." && exit 1
 
 set -a
 . .env
