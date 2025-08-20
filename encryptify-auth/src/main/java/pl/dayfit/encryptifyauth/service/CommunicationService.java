@@ -5,9 +5,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
-import pl.dayfit.encryptifyauthlib.dto.PublicKeyRotationDTO;
+import pl.dayfit.encryptifyauthlib.dto.JwksRotationEvent;
 
-import java.util.Base64;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -15,17 +15,16 @@ public class CommunicationService {
     private final RabbitTemplate rabbitTemplate;
 
     @EventListener
-    public void handleJwtKeyRotatedEvent(JwtKeyRotatedEvent event)
+    public void handleJwtKeyRotatedEvent(JwtKeyRotatedEvent ignored)
     {
-        PublicKeyRotationDTO dto = new PublicKeyRotationDTO(
-                Base64.getEncoder().encode(event.key().getEncoded()),
-                event.keyId()
+        JwksRotationEvent event = new JwksRotationEvent(
+                Instant.now()
         );
 
         rabbitTemplate.convertAndSend(
                 "auth.rotation",
                 "auth.key-changed",
-                dto
+                event
         );
     }
 }

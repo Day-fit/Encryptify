@@ -1,9 +1,7 @@
 package pl.dayfit.encryptifyauth.service;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.Curve;
-import com.nimbusds.jose.jwk.KeyUse;
-import com.nimbusds.jose.jwk.OctetKeyPair;
+import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -15,9 +13,8 @@ import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
 import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
 
 import java.security.*;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -31,7 +28,8 @@ public class JwtSecretRotationService {
 
     @Getter
     private OctetKeyPair currentOctetKeyPair;
-    private final Map<Integer, OctetKeyPair> publicKeys = new ConcurrentHashMap<>();
+    @Getter
+    private final List<JWK> publicKeys = new ArrayList<>();
 
     @PostConstruct
     private void init()
@@ -39,7 +37,7 @@ public class JwtSecretRotationService {
         MAX_SECRET_KEYS_NUMBER = jwtConfigurationProperties.getRefreshTokenValidityDays() + 1;
     }
 
-    public synchronized void generateNewSecretKey() {
+    public synchronized void generateNewSecretKey() throws Exception {
         int index = (currentSecretKey.get() + 1) % MAX_SECRET_KEYS_NUMBER;
 
         try
@@ -50,11 +48,16 @@ public class JwtSecretRotationService {
                     .issueTime(new Date())
                     .generate();
 
-            OctetKeyPair publicKey = currentOctetKeyPair.toPublicJWK();
+            JWK publicKey = currentOctetKeyPair.toPublicJWK();
 
             currentSecretKey.set(index);
-            publicKeys.put(index, publicKey);
-            applicationEventPublisher.publishEvent(new JwtKeyRotatedEvent(publicKey, index));
+
+            Callable<?> updateHandler = publicKeys.size() > index
+                    ? () -> publicKeys.set(index, publicKey)
+                    : () -> publicKeys.add(publicKey);
+
+            updateHandler.call();
+            applicationEventPublisher.publishEvent(new JwtKeyRotatedEvent());
 
             log.info("Generated new secret key, new index: {}", index);
         } catch (JOSEException ex) {
@@ -67,8 +70,8 @@ public class JwtSecretRotationService {
         return currentSecretKey.get();
     }
 
-    public OctetKeyPair getPublicKey(int index)
+    public JWKSet getPublicKeysAsJWKSet()
     {
-        return publicKeys.get(index);
+        return new JWKSet(publicKeys);
     }
 }

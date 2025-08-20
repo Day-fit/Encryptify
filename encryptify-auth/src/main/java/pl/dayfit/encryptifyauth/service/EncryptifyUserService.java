@@ -108,11 +108,6 @@ public class EncryptifyUserService {
             throw new BadCredentialsException("User is banned");
         }
 
-        if (jwtClaimsService.isExpired(refreshToken))
-        {
-            throw new BadCredentialsException("Refresh token expired");
-        }
-
         if (jwtClaimsService.getTokenType(refreshToken) != JwtTokenType.REFRESH_TOKEN)
         {
             throw new BadCredentialsException("Given token is not an instance of refresh token");

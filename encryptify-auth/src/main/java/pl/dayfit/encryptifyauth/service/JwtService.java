@@ -10,8 +10,6 @@ import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -31,13 +29,15 @@ public class JwtService {
     {
         EncryptifyUser user = encryptifyUserCacheService.getUserByUsername(username);
 
-        Map<String, Object> claims = new HashMap<>();
-
-        claims.put("roles", user.getRoles());
-        claims.put("tokenType", tokenType.toString());
-
         try {
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .subject(username)
+                    .expirationTime(new Date(System.currentTimeMillis() + expiration))
+                    .issueTime(new Date())
+                    .jwtID(UUID.randomUUID().toString())
+                    .claim("roles", user.getRoles())
+                    .claim("tokenType", tokenType.toString())
+                    .build();
 
             JWSSigner jwsSigner = new Ed25519Signer(jwtSecretRotationService.getCurrentOctetKeyPair());
             JWSObject jwsObject = new JWSObject
@@ -48,24 +48,15 @@ public class JwtService {
                                             String.valueOf(jwtSecretRotationService.getCurrentIndex())
                                     )
                                     .build(),
-                            new Payload(claims)
+
+                            new Payload(claimsSet.getClaims())
                     );
 
             jwsObject.sign(jwsSigner);
+
+            return jwsObject.serialize();
         } catch (JOSEException ex) {
             throw new IllegalStateException(ex);
         }
-
-        return Jwts.builder()
-                .id(UUID.randomUUID().toString())
-                .signWith(jwtSecretRotationService.getCurrentPrivateKey())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .issuedAt(new Date())
-                .claims(claims)
-                .subject(user.getUsername())
-                .header()
-                .add("sk_id", jwtSecretRotationService.getCurrentIndex())
-                .and()
-                .compact();
     }
 }

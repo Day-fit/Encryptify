@@ -16,6 +16,10 @@ public class JwtRotationScheduler {
     @Scheduled(fixedRate = ONE_DAY)
     public void triggerRotation()
     {
-        jwtSecretRotationService.generateNewSecretKey();
+        try {
+            jwtSecretRotationService.generateNewSecretKey();
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 }
