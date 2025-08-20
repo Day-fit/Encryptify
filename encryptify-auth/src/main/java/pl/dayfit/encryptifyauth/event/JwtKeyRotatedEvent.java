@@ -1,6 +1,6 @@
 package pl.dayfit.encryptifyauth.event;
 
-import java.security.Key;
+import com.nimbusds.jose.jwk.OctetKeyPair;
 
-public record JwtKeyRotatedEvent(Key key, int keyId) {
+public record JwtKeyRotatedEvent(OctetKeyPair key, int keyId) {
 }

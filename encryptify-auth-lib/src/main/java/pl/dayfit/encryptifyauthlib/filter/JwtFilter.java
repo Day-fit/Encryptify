@@ -36,6 +36,14 @@ public class JwtFilter extends OncePerRequestFilter {
     {
         SecurityContext context = SecurityContextHolder.getContext();
 
+        Cookie[] cookies = request.getCookies();
+
+        if(cookies == null || cookies.length == 0)
+        {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         Cookie accessToken = Arrays
                 .stream(request.getCookies())
                 .filter(cookie -> cookie.getName().equals(jwtConfigurationProperties.getAccessTokenName()))

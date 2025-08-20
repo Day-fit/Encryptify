@@ -1,6 +1,8 @@
 package pl.dayfit.encryptifyauth.service;
 
-import io.jsonwebtoken.Jwts;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.Ed25519Signer;
+import com.nimbusds.jwt.JWTClaimsSet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
@@ -33,6 +35,26 @@ public class JwtService {
 
         claims.put("roles", user.getRoles());
         claims.put("tokenType", tokenType.toString());
+
+        try {
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+
+            JWSSigner jwsSigner = new Ed25519Signer(jwtSecretRotationService.getCurrentOctetKeyPair());
+            JWSObject jwsObject = new JWSObject
+                    (
+                            new JWSHeader.Builder(JWSAlgorithm.Ed25519)
+                                    .type(JOSEObjectType.JWT)
+                                    .keyID(
+                                            String.valueOf(jwtSecretRotationService.getCurrentIndex())
+                                    )
+                                    .build(),
+                            new Payload(claims)
+                    );
+
+            jwsObject.sign(jwsSigner);
+        } catch (JOSEException ex) {
+            throw new IllegalStateException(ex);
+        }
 
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
