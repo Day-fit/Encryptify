@@ -10,4 +10,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EmailConfigurationProperties {
     private String from;
     private String subject;
+    private long verificationTokenValidityMinutes;
 }

@@ -1,8 +1,9 @@
 package pl.dayfit.encryptifyauth.event;
 
-public record UserRegisteredEvent
+public record EmailVerificationCodeEvent
         (
             String username,
-            String receiverEmail
+            String email,
+            int code
         )
 {}

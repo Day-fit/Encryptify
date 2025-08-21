@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
-import pl.dayfit.encryptifyauth.configuration.EmailConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
@@ -35,7 +34,6 @@ public class EncryptifyUserService {
     private final JwtService jwtService;
     private final HashHelper hashHelper;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final EmailConfigurationProperties emailConfigurationProperties;
 
     /**
      * Handles login logic
@@ -81,14 +79,7 @@ public class EncryptifyUserService {
                 new UserRegisteredEvent
                     (
                         dto.username(),
-                        dto.email(),
-                        jwtService
-                            .generateToken
-                                (
-                                    dto.username(),
-                                    emailConfigurationProperties.getVerificationTokenValidityMinutes() * 60 * 1000,
-                                        JwtTokenType.EMAIL_VERIFICATION
-                                )
+                        dto.email()
                     )
             );
     }

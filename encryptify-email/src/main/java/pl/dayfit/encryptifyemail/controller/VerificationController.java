@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.dayfit.encryptifyemail.service.VerificationService;
 
+import java.security.InvalidKeyException;
 import java.util.Map;
 
 @RestController
@@ -14,9 +15,9 @@ class VerificationController {
     private final VerificationService verificationService;
 
     @GetMapping("/verify")
-    public ResponseEntity<Map<String, String>> verifyAccount(@RequestParam String token)
+    public ResponseEntity<Map<String, String>> verifyAccount(@RequestParam String code) throws InvalidKeyException
     {
-        verificationService.handleVerification(token);
+        verificationService.handleVerification(code);
 
         return ResponseEntity
                 .ok(

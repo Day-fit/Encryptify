@@ -1,7 +1,0 @@
-package pl.dayfit.encryptifyemail.type;
-
-public enum JwtTokenType {
-    ACCESS_TOKEN,
-    REFRESH_TOKEN,
-    EMAIL_VERIFICATION,
-}

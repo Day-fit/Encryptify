@@ -11,7 +11,7 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class CommunicationService {
+public class JWKCommunicationService {
     private final RabbitTemplate rabbitTemplate;
 
     @EventListener

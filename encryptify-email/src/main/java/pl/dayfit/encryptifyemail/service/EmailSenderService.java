@@ -10,11 +10,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyemail.configuration.EmailConfigurationProperties;
-import pl.dayfit.encryptifyemail.event.UserRegisteredEvent;
+import pl.dayfit.encryptifyemail.event.EmailVerificationCodeEvent;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,22 +27,33 @@ import java.nio.charset.StandardCharsets;
 public class EmailSenderService {
     private final JavaMailSender mailSender;
     private final EmailConfigurationProperties emailConfigurationProperties;
+    private final RedisTemplate<Object, Object> redisTemplate;
 
     @Value("${encryptify.domain}")
     private String encryptifyDomain;
 
+    //TODO: fill the documentation
+    /**
+     * Handles sending an email with verification code, code expires in time specified in configuration properties
+     * @param event trigger for rabbitMQ
+     * @throws MessagingException
+     * @throws IOException
+     */
     @RabbitListener(queues = "email.sender")
-    public void sendVerificationEmail(UserRegisteredEvent event) throws MessagingException, IOException {
+    public void sendVerificationEmail(EmailVerificationCodeEvent event) throws MessagingException, IOException {
+        String username = event.username();
+        int code = event.code();
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setSubject(emailConfigurationProperties.getSubject());
         helper.setFrom(emailConfigurationProperties.getFrom());
-        helper.addTo(event.receiverEmail());
+        helper.addTo(event.email());
         helper.setText(loadEmailTemplate()
                         .replace("$ENCRYPTIFY_DOMAIN", encryptifyDomain)
-                        .replace("$USERNAME", event.username())
-                        .replace("$JWT_TOKEN", event.verificationToken()), true);
+                        .replace("$USERNAME", username)
+                        .replace("$CODE", String.valueOf(code)), true);
 
         mailSender.send(message);
     }
