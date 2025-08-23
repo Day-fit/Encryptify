@@ -1,0 +1,13 @@
+dataSources/
+inspectionProfiles/
+shelf/
+
+compiler.xml
+dataSources.local.xml
+encodings.xml
+jarRepositories.xml
+misc.xml
+workspace.xml
+
+!vcs.xml
+!Encryptify.iml
