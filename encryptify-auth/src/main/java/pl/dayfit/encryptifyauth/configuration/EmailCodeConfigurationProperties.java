@@ -4,9 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Getter
 @Setter
-@ConfigurationProperties(prefix = "cookies")
-public class CookieConfigurationProperties {
-    private boolean secured;
+@Getter
+@ConfigurationProperties(prefix = "email.code")
+public class EmailCodeConfigurationProperties {
+    private long validityInMinutes;
 }

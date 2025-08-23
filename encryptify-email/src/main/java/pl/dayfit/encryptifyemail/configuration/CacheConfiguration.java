@@ -1,9 +1,8 @@
-package pl.dayfit.encryptifyauth.configuration;
+package pl.dayfit.encryptifyemail.configuration;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -32,28 +31,16 @@ public class CacheConfiguration {
     }
 
     @Bean
-    @Order(1)
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory)
     {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 
         redisTemplate.setConnectionFactory(redisConnectionFactory);
-        redisTemplate.setEnableTransactionSupport(true);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setHashKeySerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         redisTemplate.afterPropertiesSet();
-
-        return redisTemplate;
-    }
-
-    @Bean("noTransactionsRedisTemplate")
-    public RedisTemplate<String, Object> noTransactionsRedisTemplate(RedisConnectionFactory redisConnectionFactory)
-    {
-        RedisTemplate<String, Object> redisTemplate = redisTemplate(redisConnectionFactory);
-
-        redisTemplate.setEnableTransactionSupport(false);
 
         return redisTemplate;
     }

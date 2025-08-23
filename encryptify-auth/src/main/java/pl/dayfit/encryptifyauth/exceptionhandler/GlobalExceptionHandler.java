@@ -7,6 +7,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pl.dayfit.encryptifyauth.exception.NoUniqueCodeException;
 import pl.dayfit.encryptifyauth.exception.UserAlreadyExistsException;
 
 import java.util.Map;
@@ -45,6 +46,18 @@ public class GlobalExceptionHandler {
                 Map.of("message",
                         ex.getMessage())
         );
+    }
+
+    @ExceptionHandler(NoUniqueCodeException.class)
+    public ResponseEntity<?> handleNoUniqueCodeException(NoUniqueCodeException ex)
+    {
+        log.debug("No unique code has been found for user. {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        "error",
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(Exception.class)

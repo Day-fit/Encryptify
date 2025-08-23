@@ -11,6 +11,7 @@ import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
 
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -21,12 +22,14 @@ public class JwtService {
     /**
      * Generates JWT token based on parameters
      * @param username subject username
-     * @param expiration token validity time (millis)
+     * @param expiration token validity time
+     * @param timeUnit time unit of the expiration time
      * @param tokenType enum that represents token type
      * @return generated token
      */
-    public String generateToken(String username, long expiration, JwtTokenType tokenType)
+    public String generateToken(String username, long expiration, TimeUnit timeUnit, JwtTokenType tokenType)
     {
+        expiration = timeUnit.toMillis(expiration);
         EncryptifyUser user = encryptifyUserCacheService.getUserByUsername(username);
 
         try {

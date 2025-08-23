@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pl.dayfit.encryptifyemail.exception.InvalidCodeException;
 
-import java.security.InvalidKeyException;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -18,8 +18,8 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
 
-    @ExceptionHandler(InvalidKeyException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidKeyException(InvalidKeyException ex)
+    @ExceptionHandler(InvalidCodeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidKeyException(InvalidCodeException ex)
     {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)

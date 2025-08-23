@@ -10,9 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
-import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
 
-import java.security.*;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;

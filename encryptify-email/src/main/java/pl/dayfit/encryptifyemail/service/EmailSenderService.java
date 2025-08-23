@@ -10,7 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -27,17 +26,17 @@ import java.nio.charset.StandardCharsets;
 public class EmailSenderService {
     private final JavaMailSender mailSender;
     private final EmailConfigurationProperties emailConfigurationProperties;
-    private final RedisTemplate<Object, Object> redisTemplate;
 
     @Value("${encryptify.domain}")
     private String encryptifyDomain;
 
-    //TODO: fill the documentation
     /**
-     * Handles sending an email with verification code, code expires in time specified in configuration properties
-     * @param event trigger for rabbitMQ
-     * @throws MessagingException
-     * @throws IOException
+     * Handles sending an email containing a verification code to the recipient specified in the event.
+     * The verification code expires after the duration defined in the configuration properties.
+     *
+     * @param event the RabbitMQ event containing recipient details and verification data
+     * @throws MessagingException if there is an error while constructing or sending the email
+     * @throws IOException if an I/O error occurs while processing email templates or attachments
      */
     @RabbitListener(queues = "email.sender")
     public void sendVerificationEmail(EmailVerificationCodeEvent event) throws MessagingException, IOException {
