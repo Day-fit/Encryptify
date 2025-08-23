@@ -4,6 +4,7 @@ shelf/
 
 compiler.xml
 dataSources.local.xml
+dataSources.xml
 encodings.xml
 jarRepositories.xml
 misc.xml
