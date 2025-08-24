@@ -36,7 +36,7 @@ public class JwtSecretRotationService {
         MAX_SECRET_KEYS_NUMBER = jwtConfigurationProperties.getRefreshTokenValidityDays() + 1;
     }
 
-    public synchronized void generateNewSecretKey() throws Exception {
+    public synchronized void generateNewSecretKey() throws Exception{
         int index = (currentSecretKey.get() + 1) % MAX_SECRET_KEYS_NUMBER;
 
         try
