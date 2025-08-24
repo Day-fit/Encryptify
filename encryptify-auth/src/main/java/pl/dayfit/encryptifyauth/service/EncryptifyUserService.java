@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
+import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
@@ -19,6 +21,7 @@ import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,8 @@ public class EncryptifyUserService {
     private final JwtClaimsService jwtClaimsService;
     private final JwtService jwtService;
     private final HashHelper hashHelper;
+    private final EmailCommunicationService emailCommunicationService;
+    private final JwtConfigurationProperties jwtConfigurationProperties;
 
     /**
      * Handles login logic
@@ -47,6 +52,7 @@ public class EncryptifyUserService {
      * @param dto dto with register credentials
      * @throws UserAlreadyExistsException if user with given username or email already exists
      */
+    @Transactional
     public void handleRegister(RegisterRequestDTO dto)
     {
         if(userRepository.existsByEmailHashLookup(dto.email()) || userRepository.existsByUsername(dto.username()))
@@ -54,7 +60,8 @@ public class EncryptifyUserService {
             throw new UserAlreadyExistsException("User already exists");
         }
 
-        cacheService.saveUser(new EncryptifyUser(
+        cacheService
+                .saveUser(new EncryptifyUser(
                         null,
                         passwordEncoder.encode(dto.email()),
                         hashHelper.generateEmailLookup( dto.email()),
@@ -62,19 +69,22 @@ public class EncryptifyUserService {
                         passwordEncoder.encode(dto.password()),
                         Instant.now(),
                         false,
-                        false,
-                        List.of("USER")
+                        false, //we are waiting for user to verify their email
+                        List.of("USER"),
+                        null
                 )
         );
+
+        emailCommunicationService
+                .handleVerificationSending(dto.username(),  dto.email());
     }
 
     /**
      * Generates access token with set validity if refresh token is valid
      * @param refreshToken potential refresh token content
-     * @param validity time given in millis that describe how long generated token will be valid
      * @return string form of jwt access token
      */
-    public String handleAccessTokenRefresh(String refreshToken, long validity)
+    public String handleAccessTokenRefresh(String refreshToken)
     {
         String username = jwtClaimsService.getSubject(refreshToken);
 
@@ -83,17 +93,19 @@ public class EncryptifyUserService {
             throw new BadCredentialsException("User is banned");
         }
 
-        if (jwtClaimsService.isExpired(refreshToken))
-        {
-            throw new BadCredentialsException("Refresh token expired");
-        }
-
         if (jwtClaimsService.getTokenType(refreshToken) != JwtTokenType.REFRESH_TOKEN)
         {
             throw new BadCredentialsException("Given token is not an instance of refresh token");
         }
 
-        return jwtService.generateToken(username, validity, JwtTokenType.ACCESS_TOKEN);
+        return jwtService.generateToken
+                (
+                        username,
+                        jwtConfigurationProperties
+                                .getAccessTokenValidityMinutes(),
+                        TimeUnit.MINUTES,
+                        JwtTokenType.ACCESS_TOKEN
+                );
     }
 
     /**

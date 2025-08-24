@@ -2,7 +2,6 @@ package pl.dayfit.encryptifyauth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
 
 import java.time.Instant;
 import java.util.List;
@@ -38,4 +37,6 @@ public class EncryptifyUser {
 
     @Column(nullable = false)
     private List<String> roles;
+
+    private Instant emailVerificationDate;
 }

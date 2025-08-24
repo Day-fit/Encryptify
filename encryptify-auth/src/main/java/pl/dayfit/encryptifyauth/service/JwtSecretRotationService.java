@@ -1,16 +1,19 @@
 package pl.dayfit.encryptifyauth.service;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
-import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
 
-import java.security.*;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -22,8 +25,10 @@ public class JwtSecretRotationService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private int MAX_SECRET_KEYS_NUMBER;
 
-    private PrivateKey privateKey;
-    private final Map<Integer, PublicKey> publicKeys = new ConcurrentHashMap<>();
+    @Getter
+    private OctetKeyPair currentOctetKeyPair;
+    @Getter
+    private final List<JWK> publicKeys = new ArrayList<>();
 
     @PostConstruct
     private void init()
@@ -31,31 +36,32 @@ public class JwtSecretRotationService {
         MAX_SECRET_KEYS_NUMBER = jwtConfigurationProperties.getRefreshTokenValidityDays() + 1;
     }
 
-    public synchronized void generateNewSecretKey()
-    {
-        PublicKey publicKey;
+    public synchronized void generateNewSecretKey() throws Exception{
         int index = (currentSecretKey.get() + 1) % MAX_SECRET_KEYS_NUMBER;
 
-        try {
-            KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("Ed25519");
-            KeyPair keyPair = keyGenerator.generateKeyPair();
+        try
+        {
+            currentOctetKeyPair = new OctetKeyPairGenerator(Curve.Ed25519)
+                    .keyUse(KeyUse.SIGNATURE)
+                    .keyID(String.valueOf(index))
+                    .issueTime(new Date())
+                    .generate();
 
-            privateKey = keyPair.getPrivate();
-            publicKey = keyPair.getPublic();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            JWK publicKey = currentOctetKeyPair.toPublicJWK();
+
+            currentSecretKey.set(index);
+
+            Callable<?> updateHandler = publicKeys.size() > index
+                    ? () -> publicKeys.set(index, publicKey)
+                    : () -> publicKeys.add(publicKey);
+
+            updateHandler.call();
+            applicationEventPublisher.publishEvent(new JwtKeyRotatedEvent());
+
+            log.info("Generated new secret key, new index: {}", index);
+        } catch (JOSEException ex) {
+            log.error("Could not generate new secret key.", ex);
         }
-
-        currentSecretKey.set(index);
-        publicKeys.put(index, publicKey);
-        applicationEventPublisher.publishEvent(new JwtKeyRotatedEvent(publicKey, index));
-
-        log.info("Generated new secret key, new index: {}", index);
-    }
-
-    public PrivateKey getCurrentPrivateKey()
-    {
-        return privateKey;
     }
 
     public int getCurrentIndex()
@@ -63,8 +69,8 @@ public class JwtSecretRotationService {
         return currentSecretKey.get();
     }
 
-    public PublicKey getPublicKey(int index)
+    public JWKSet getPublicKeysAsJWKSet()
     {
-        return publicKeys.get(index);
+        return new JWKSet(publicKeys);
     }
 }

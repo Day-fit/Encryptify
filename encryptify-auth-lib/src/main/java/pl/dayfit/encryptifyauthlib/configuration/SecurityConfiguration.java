@@ -14,7 +14,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import pl.dayfit.encryptifyauthlib.entrypoint.EncryptifyAuthenticationEntrypoint;
-import pl.dayfit.encryptifyauthlib.filter.JwtFilter;
+import pl.dayfit.encryptifyauthlib.filter.CookieFilter;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -24,22 +26,26 @@ public class SecurityConfiguration {
     private final SecurityConfigurationProperties securityConfigurationProperties;
     private final CorsConfigurationSource corsConfigurationSource;
     private final EncryptifyAuthenticationEntrypoint authenticationEntrypoint;
-    private final JwtFilter jwtFilter;
+    private final CookieFilter cookieFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception
     {
+        List<String> securedEndpoints = securityConfigurationProperties.getSecuredEndpoints();
+        securedEndpoints = securedEndpoints == null ? List.of() : securedEndpoints;
+
+        List<String> finalSecuredEndpoints = securedEndpoints;
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(request ->
                         request
-                                .requestMatchers(securityConfigurationProperties.getSecuredEndpoints().toArray(new String[0])).authenticated()
+                                .requestMatchers(finalSecuredEndpoints.toArray(new String[0])).authenticated()
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(authenticationEntrypoint))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(cookieFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

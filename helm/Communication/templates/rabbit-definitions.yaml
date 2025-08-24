@@ -32,16 +32,17 @@ stringData:
         {
           "user": "{{ .Values.rabbitmq.auth.su_username }}",
           "vhost": "/",
-          "configure": "",
+          "configure": ".*",
           "write": ".*",
           "read": ".*"
         }
       ],
       "queues": [
         { "name": "service.core", "vhost": "/", "durable": true },
-        { "name": "service.encrypt", "vhost": "/",  "durable": true },
+        { "name": "service.encryption", "vhost": "/",  "durable": true },
         { "name": "service.auth", "vhost": "/", "durable": true },
-        { "name": "service.email", "vhost": "/", "durable": true }
+        { "name": "service.email", "vhost": "/", "durable": true },
+        { "name": "email.sender", "vhost": "/", "durable": true }
       ],
       "exchanges": [
         { "name": "user.events", "vhost": "/", "type": "topic", "durable": true },
@@ -51,9 +52,16 @@ stringData:
         {
           "source": "user.events",
           "vhost": "/",
-          "destination": "service.email",
+          "destination": "email.sender",
           "destination_type": "queue",
           "routing_key": "user.created"
+        },
+        {
+          "source": "user.events",
+          "vhost": "/",
+          "destination": "service.auth",
+          "destination_type": "queue",
+          "routing_key": "user.verified"
         },
         {
           "source": "auth.rotation",
@@ -65,7 +73,14 @@ stringData:
         {
           "source": "auth.rotation",
           "vhost": "/",
-          "destination": "service.encrypt",
+          "destination": "service.encryption",
+          "destination_type": "queue",
+          "routing_key": "auth.key-changed"
+        },
+        {
+          "source": "auth.rotation",
+          "vhost": "/",
+          "destination": "service.email",
           "destination_type": "queue",
           "routing_key": "auth.key-changed"
         }

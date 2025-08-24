@@ -19,6 +19,6 @@ public class AccountBannedCheck implements AccountCheck {
             return;
         }
 
-        throw new LockedException("Account is locked");
+        throw new LockedException("Sorry, your account is locked.");
     }
 }

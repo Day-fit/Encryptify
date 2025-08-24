@@ -11,6 +11,7 @@
       <w>envsubst</w>
       <w>ghcr</w>
       <w>helmfile</w>
+      <w>jwks</w>
       <w>mktemp</w>
       <w>mvnw</w>
       <w>socha</w>

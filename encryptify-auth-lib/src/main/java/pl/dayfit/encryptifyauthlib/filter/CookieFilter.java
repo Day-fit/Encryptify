@@ -17,7 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import pl.dayfit.encryptifyauthlib.authenticationprovider.JwtAuthenticationProvider;
-import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauthlib.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauthlib.token.JwtAuthenticationTokenCandidate;
 
 import java.io.IOException;
@@ -26,19 +26,27 @@ import java.util.Arrays;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@EnableConfigurationProperties({JwtConfigurationProperties.class})
-public class JwtFilter extends OncePerRequestFilter {
+@EnableConfigurationProperties({CookieConfigurationProperties.class})
+public class CookieFilter extends OncePerRequestFilter {
     private final JwtAuthenticationProvider jwtAuthenticationProvider;
-    private final JwtConfigurationProperties jwtConfigurationProperties;
+    private final CookieConfigurationProperties cookieConfigurationProperties;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException
     {
         SecurityContext context = SecurityContextHolder.getContext();
 
+        Cookie[] cookies = request.getCookies();
+
+        if(cookies == null || cookies.length == 0)
+        {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         Cookie accessToken = Arrays
                 .stream(request.getCookies())
-                .filter(cookie -> cookie.getName().equals(jwtConfigurationProperties.getAccessTokenName()))
+                .filter(cookie -> cookie.getName().equals(cookieConfigurationProperties.getAccessTokenName()))
                 .findFirst()
                 .orElse(null);
 

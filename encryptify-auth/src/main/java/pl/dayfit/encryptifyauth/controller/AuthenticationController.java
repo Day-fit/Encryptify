@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -14,26 +15,28 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import pl.dayfit.encryptifyauth.configuration.CookieConfigurationProperties;
+import pl.dayfit.encryptifyauthlib.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.service.JwtService;
 import pl.dayfit.encryptifyauth.service.EncryptifyUserService;
-import pl.dayfit.encryptifyauthlib.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@EnableConfigurationProperties(JwtConfigurationProperties.class)
 public class AuthenticationController {
     private final EncryptifyUserService encryptifyUserService;
     private final JwtService jwtService;
-    private final CookieConfigurationProperties configurationProperties;
     private final JwtConfigurationProperties jwtConfigurationProperties;
+    private final CookieConfigurationProperties cookieConfigurationProperties;
 
     private int refreshTokenValidityDays;
     private String refreshTokenName;
@@ -45,10 +48,10 @@ public class AuthenticationController {
     private void init()
     {
         refreshTokenValidityDays =  jwtConfigurationProperties.getRefreshTokenValidityDays();
-        refreshTokenName = jwtConfigurationProperties.getRefreshTokenName();
+        refreshTokenName = cookieConfigurationProperties.getRefreshTokenName();
         accessTokenValidityMinutes = jwtConfigurationProperties.getAccessTokenValidityMinutes();
-        accessTokenName = jwtConfigurationProperties.getAccessTokenName();
-        isSecured = configurationProperties.isSecured();
+        accessTokenName = cookieConfigurationProperties.getAccessTokenName();
+        isSecured = jwtConfigurationProperties.isUseSecureCookies();
     }
 
     @PostMapping("/api/v1/login")
@@ -58,7 +61,13 @@ public class AuthenticationController {
 
         ResponseCookie accessTokenCookie = ResponseCookie.from(
                     accessTokenName,
-                    jwtService.generateToken(username, accessTokenValidityMinutes * 60 * 1000L, JwtTokenType.ACCESS_TOKEN)
+                    jwtService.generateToken
+                            (
+                                    username,
+                                    accessTokenValidityMinutes,
+                                    TimeUnit.MINUTES,
+                                    JwtTokenType.ACCESS_TOKEN
+                            )
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -68,7 +77,13 @@ public class AuthenticationController {
 
         ResponseCookie refreshTokenCookie = ResponseCookie.from(
                     refreshTokenName,
-                    jwtService.generateToken(username, refreshTokenValidityDays * 24 * 60 * 60 * 1000L,  JwtTokenType.REFRESH_TOKEN)
+                    jwtService.generateToken
+                            (
+                                    username,
+                                    refreshTokenValidityDays,
+                                    TimeUnit.DAYS,
+                                    JwtTokenType.REFRESH_TOKEN
+                            )
                 )
                 .httpOnly(true)
                 .secure(isSecured)
@@ -127,7 +142,7 @@ public class AuthenticationController {
                 .findFirst()
                 .orElseThrow(() -> new BadCredentialsException("Could not find refresh token"));
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, encryptifyUserService.handleAccessTokenRefresh(refreshTokenCookie.getValue(), accessTokenValidityMinutes * 60 * 1000L))
+        ResponseCookie accessTokenCookie = ResponseCookie.from(accessTokenName, encryptifyUserService.handleAccessTokenRefresh(refreshTokenCookie.getValue()))
                 .httpOnly(true)
                 .secure(isSecured)
                 .path("/")

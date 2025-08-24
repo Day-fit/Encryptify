@@ -25,19 +25,12 @@
         <module name="encryptify-encryption" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="encryptify-data" target="17" />
-      <module name="encryptify-data-lib" target="17" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="encryptify" options="" />
       <module name="encryptify-auth" options="-parameters" />
       <module name="encryptify-auth-lib" options="-parameters" />
       <module name="encryptify-core" options="-parameters" />
-      <module name="encryptify-data" options="-parameters" />
-      <module name="encryptify-data-lib" options="-parameters" />
       <module name="encryptify-email" options="-parameters" />
       <module name="encryptify-encryption" options="-parameters" />
     </option>

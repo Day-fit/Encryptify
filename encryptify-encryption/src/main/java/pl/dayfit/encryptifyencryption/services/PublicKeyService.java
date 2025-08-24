@@ -2,10 +2,10 @@ package pl.dayfit.encryptifyencryption.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifydata.cacheservice.DriveDirectoryCacheService;
-import pl.dayfit.encryptifydata.cacheservice.DriveFileCacheService;
-import pl.dayfit.encryptifydata.entity.DriveDirectory;
-import pl.dayfit.encryptifydata.entity.DriveFile;
+import pl.dayfit.encryptifyencryption.cacheservice.DriveDirectoryCacheService;
+import pl.dayfit.encryptifyencryption.cacheservice.DriveFileCacheService;
+import pl.dayfit.encryptifyencryption.entity.DriveDirectory;
+import pl.dayfit.encryptifyencryption.entity.DriveFile;
 import pl.dayfit.encryptifyencryption.dto.PublicKeyUploadDto;
 
 import java.util.function.Consumer;
@@ -17,7 +17,10 @@ public class PublicKeyService {
     private final DriveFileCacheService driveFileCacheService;
 
     public void assignPublicKey(PublicKeyUploadDto publicKeyUploadDto) {
-        Consumer<PublicKeyUploadDto> resolver = publicKeyUploadDto.isDirectory() ? this::assignPublicKeyToDirectory : this::assignPublicKeyToFile;
+        Consumer<PublicKeyUploadDto> resolver = publicKeyUploadDto.isDirectory()
+                ? this::assignPublicKeyToDirectory
+                : this::assignPublicKeyToFile;
+
         resolver.accept(publicKeyUploadDto);
     }
 

@@ -15,6 +15,6 @@ public class AccountActivatedCheck implements AccountCheck {
             return;
         }
 
-        throw new DisabledException("Account is disabled");
+        throw new DisabledException("In order to use your account, please log-in first.");
     }
 }

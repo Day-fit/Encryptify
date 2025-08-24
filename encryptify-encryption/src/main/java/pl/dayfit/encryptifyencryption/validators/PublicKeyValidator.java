@@ -13,7 +13,7 @@ public class PublicKeyValidator implements ConstraintValidator<PublicKey, String
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(s));
             keyFactory.generatePublic(keySpec);
             return true;
