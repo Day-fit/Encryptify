@@ -10,7 +10,7 @@
         <module name="encryptify-email" />
         <module name="encryptify-auth-lib" />
       </profile>
-      <profile name="Annotation profile for encryptify-auth" enabled="true">
+      <profile name="Annotation profile for encryptify-encryption" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
