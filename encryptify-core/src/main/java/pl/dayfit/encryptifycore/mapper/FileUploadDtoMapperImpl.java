@@ -1,8 +1,8 @@
 package pl.dayfit.encryptifycore.mapper;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PostMapping;
 import pl.dayfit.encryptifycore.configuration.FilesConfigurationProperties;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.entity.DriveFile;
@@ -14,15 +14,9 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@EnableConfigurationProperties(FilesConfigurationProperties.class)
 public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     private final FilesConfigurationProperties filesConfigurationProperties;
-    private String savePath;
-
-    @PostMapping
-    private void init()
-    {
-        savePath = filesConfigurationProperties.getSavePath();
-    }
 
     @Override
     public DriveFile toDestination(FileRequestDto fileRequestDto, String uploader) {
@@ -35,7 +29,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setUploader(uploader);
         driveFile.setUploadDate(Instant.now());
 
-        driveFile.setPath(savePath + File.separator + uuid);
+        driveFile.setPath(filesConfigurationProperties.getSavePath() + File.separator + uuid);
 
         return driveFile;
     }

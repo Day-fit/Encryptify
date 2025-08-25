@@ -3,6 +3,7 @@ package pl.dayfit.encryptifyauth.service;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.Ed25519Signer;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
@@ -43,7 +44,7 @@ public class JwtService {
                     .build();
 
             JWSSigner jwsSigner = new Ed25519Signer(jwtSecretRotationService.getCurrentOctetKeyPair());
-            JWSObject jwsObject = new JWSObject
+            SignedJWT jwsObject = new SignedJWT
                     (
                             new JWSHeader.Builder(JWSAlgorithm.Ed25519)
                                     .type(JOSEObjectType.JWT)
@@ -52,7 +53,7 @@ public class JwtService {
                                     )
                                     .build(),
 
-                            new Payload(claimsSet.getClaims())
+                            claimsSet
                     );
 
             jwsObject.sign(jwsSigner);
