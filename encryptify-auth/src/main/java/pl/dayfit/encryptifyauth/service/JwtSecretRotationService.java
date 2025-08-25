@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.event.JwtKeyRotatedEvent;
 import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class JwtSecretRotationService {
     private final JwtConfigurationProperties jwtConfigurationProperties;
+    private final JwtClaimsService jwtClaimsService;
     private final AtomicInteger currentSecretKey = new AtomicInteger(-1);
     private final ApplicationEventPublisher applicationEventPublisher;
     private int MAX_SECRET_KEYS_NUMBER;
@@ -34,6 +36,7 @@ public class JwtSecretRotationService {
     private void init()
     {
         MAX_SECRET_KEYS_NUMBER = jwtConfigurationProperties.getRefreshTokenValidityDays() + 1;
+        jwtClaimsService.setJwkSetSupplier(this::getPublicKeysAsJWKSet);
     }
 
     public synchronized void generateNewSecretKey() throws Exception{

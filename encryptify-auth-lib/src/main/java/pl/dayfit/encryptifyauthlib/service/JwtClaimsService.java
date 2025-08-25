@@ -2,14 +2,13 @@ package pl.dayfit.encryptifyauthlib.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.Ed25519Verifier;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.OctetKeyPair;
-import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
+import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -61,14 +60,17 @@ public class JwtClaimsService {
     {
         try
         {
-            JWT jwt = JWTParser.parse(token);
+            SignedJWT jwt = (SignedJWT) JWTParser.parse(token);
             JWKSet set = jwkSetSupplier.get();
-            JWSHeader header = (JWSHeader) jwt.getHeader();
+            JWSHeader header = jwt.getHeader();
 
             OctetKeyPair publicKey = set.getKeyByKeyId(header.getKeyID()).toOctetKeyPair();
             JWSVerifier verifier = new Ed25519Verifier(publicKey);
 
-            ((JWSObject) jwt).verify(verifier);
+            if(!jwt.verify(verifier))
+            {
+                throw new BadCredentialsException("Invalid token");
+            }
 
             return claimsResolver.apply(
                     jwt.getJWTClaimsSet()
