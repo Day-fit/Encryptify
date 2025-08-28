@@ -18,4 +18,4 @@ RUN \
 
 CMD ["java", "-jar", "/app/encryptify-auth.jar"]
 
-EXPOSE 8080
+EXPOSE 8083
