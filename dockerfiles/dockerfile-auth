@@ -1,0 +1,21 @@
+FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
+
+LABEL name="encryptify-auth"
+LABEL maintainer="Dayfit"
+LABEL description="Encryptify Auth Service"
+
+COPY ./.mvn /app/.mvn
+COPY ./mvnw /app/mvnw
+
+COPY ./encryptify-auth /app/encryptify-auth
+WORKDIR /app
+
+# Compile source code
+RUN \
+    cd /app/encryptify-auth && \
+    ../mvnw package -DskipTests && \
+    mv /app/encryptify-core/target/encryptify-auth-*.jar /app/encryptify-auth.jar
+
+CMD ["java", "-jar", "/app/encryptify-auth.jar"]
+
+EXPOSE 8080
