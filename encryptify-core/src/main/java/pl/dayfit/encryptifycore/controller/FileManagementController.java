@@ -3,15 +3,14 @@ package pl.dayfit.encryptifycore.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pl.dayfit.encryptifyauthlib.principal.UserPrincipal;
 import pl.dayfit.encryptifycore.dto.FileDeleteDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
+import pl.dayfit.encryptifycore.dto.FileResponseDto;
 import pl.dayfit.encryptifycore.service.FileManagementService;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,11 +18,23 @@ import java.util.Map;
 public class FileManagementController {
     private final FileManagementService fileManagementService;
 
-    @PostMapping("/api/v1/upload-file")
+    @GetMapping("/get-files")
+    public ResponseEntity<List<FileResponseDto>> getFiles(@RequestParam(required = false) Long folderId, @AuthenticationPrincipal UserPrincipal userPrincipal)
+    {
+        List<FileResponseDto> dtoList =
+                fileManagementService.getFiles(
+                    userPrincipal.getName(),
+                    folderId
+                );
+
+        return dtoList.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(dtoList);
+    }
+
+    @PostMapping("/upload-file")
     public ResponseEntity<?> handleUploadingFile(@RequestBody FileRequestDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
-        fileManagementService.handleFileUpload(dto, userPrincipal.getName());
-        return ResponseEntity.ok(Map.of("message", "Successfully uploaded file"));
+        long id = fileManagementService.handleFileUpload(dto, userPrincipal.getName());
+        return ResponseEntity.ok(Map.of("id", id));
     }
 
     @DeleteMapping("/api/v1/delete-file")

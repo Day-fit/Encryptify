@@ -10,11 +10,13 @@ import java.util.Optional;
 
 @Repository
 public interface DriveFileRepository extends JpaRepository<DriveFile, Long> {
-    List<DriveFile> findAllByParent_Id(Long id);
-
     @Query("SELECT d.id FROM DriveFile d WHERE d.parent.id = :id")
     List<Long> findAllIdByParent_Id(Long id);
 
     @Query("SELECT d.uploader FROM DriveFile d WHERE d.id = :id")
     Optional<String> findUploader_UsernameById(Long id);
+
+    List<DriveFile> findAllByParent_Id(Long id);
+
+    List<DriveFile> findAllByParentNullAndUploader(String uploader);
 }

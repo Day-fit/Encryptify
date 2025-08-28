@@ -25,7 +25,7 @@ public class DriveDirectory {
     private String name;
 
     @Column(nullable = false)
-    private long uploaderId;
+    private String uploader;
 
     @OneToMany(fetch =  FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "parent")
     private List<DriveFile> files;

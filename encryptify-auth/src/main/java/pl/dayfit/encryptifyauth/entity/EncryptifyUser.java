@@ -20,7 +20,7 @@ public class EncryptifyUser {
     @Column(nullable = false)
     private String emailProof;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String emailHashLookup;
 
     @Column(nullable = false, unique = true)

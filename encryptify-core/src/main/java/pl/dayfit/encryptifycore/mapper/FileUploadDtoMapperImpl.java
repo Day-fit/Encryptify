@@ -23,14 +23,40 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         UUID uuid = UUID.randomUUID();
         DriveFile driveFile = new DriveFile();
 
+        byte[] bytes = Base64.getDecoder().decode(fileRequestDto.base64Content());
+
         driveFile.setUuid(uuid);
         driveFile.setName(fileRequestDto.name());
-        driveFile.setContent(Base64.getDecoder().decode(fileRequestDto.base64Content()));
         driveFile.setUploader(uploader);
         driveFile.setUploadDate(Instant.now());
-
         driveFile.setPath(filesConfigurationProperties.getSavePath() + File.separator + uuid);
+        driveFile.setFileSize(
+                formatBytes(bytes.length)
+        );
 
         return driveFile;
+    }
+
+    private static String formatBytes(long bytes) {
+        double value = bytes;
+        String unit;
+
+        if (bytes < 1024) {
+            unit = "B";
+        } else if (bytes < 1024L * 1024) {
+            value = bytes / 1024.0;
+            unit = "KB";
+        } else if (bytes < 1024L * 1024 * 1024) {
+            value = bytes / (1024.0 * 1024);
+            unit = "MB";
+        } else if (bytes < 1024L * 1024 * 1024 * 1024) {
+            value = bytes / (1024.0 * 1024 * 1024);
+            unit = "GB";
+        } else {
+            value = bytes / (1024.0 * 1024 * 1024 * 1024);
+            unit = "TB";
+        }
+
+        return String.format("%.2f %s", value, unit);
     }
 }

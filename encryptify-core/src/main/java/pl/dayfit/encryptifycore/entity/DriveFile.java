@@ -21,15 +21,14 @@ public class DriveFile {
     @Column(nullable = false)
     private String name;
 
-    @Lob
-    @Column(nullable = false)
-    private byte[] content;
-
     @Column(nullable = false)
     private Instant uploadDate;
 
     @Column(nullable = false)
     private String uploader;
+
+    @Column(nullable = false)
+    private String fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private DriveDirectory parent;
