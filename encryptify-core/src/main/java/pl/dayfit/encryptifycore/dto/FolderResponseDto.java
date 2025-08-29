@@ -4,9 +4,9 @@ import pl.dayfit.encryptifycore.types.FileSystemTypes;
 
 import java.time.Instant;
 
-public record FileResponseDto (Long id, String name, String fileSize, Instant uploadDate) implements FileSystemDto {
+public record FolderResponseDto(Long id, String name, Instant creationDate) implements FileSystemDto {
     @Override
     public FileSystemTypes type() {
-        return FileSystemTypes.FILE;
+        return FileSystemTypes.FOLDER;
     }
 }

@@ -1,25 +1,20 @@
 package pl.dayfit.encryptifycore.service;
 
+import io.minio.errors.InsufficientDataException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
-import pl.dayfit.encryptifycore.dto.FileResponseDto;
 import pl.dayfit.encryptifycore.exception.FileActionException;
-import pl.dayfit.encryptifycore.mapper.FileResponseMapper;
 import pl.dayfit.encryptifycore.mapper.FileUploadDtoMapper;
 import pl.dayfit.encryptifycore.cacheservice.DriveFileCacheService;
 import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.helper.DriveFileAccessHelper;
 
-import javax.annotation.Nullable;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import java.io.OutputStream;
 
 @Slf4j
 @Service
@@ -28,7 +23,7 @@ public class FileManagementService {
     private final DriveFileAccessHelper accessHelper;
     private final DriveFileCacheService driveFileCacheService;
     private final FileUploadDtoMapper fileUploadDtoMapper;
-    private final FileResponseMapper fileResponseMapper;
+    private final MinioService minioService;
 
     /**
      * Handles process of uploading the file by saving it into filesystem and database
@@ -36,6 +31,7 @@ public class FileManagementService {
      * @param uploader username of the uploader
      * @return file's id
      */
+    @Transactional
     public long handleFileUpload(FileRequestDto fileRequestDto, String uploader)
     {
         DriveFile driveFile = fileUploadDtoMapper.toDestination(
@@ -44,23 +40,16 @@ public class FileManagementService {
         );
 
         try {
-            Path path = Path.of(driveFile.getPath());
-
-            Files.createFile(path);
-
-            try (FileOutputStream fos = new FileOutputStream(path.toFile()))
-            {
-                fos.write(fileRequestDto.base64Content()
-                        .getBytes(StandardCharsets.UTF_8));
-                fos.flush();
-            }
+            minioService.addFile(fileRequestDto.base64Content(), driveFile);
         } catch (IOException ex) {
             log.warn("Failed to create file {}, reason: {}", driveFile.getPath(), ex.getMessage());
             throw new FileActionException("Failed to create file");
+        } catch (InsufficientDataException ex) {
+            log.warn("Insufficient data for file {}", driveFile.getPath());
+            throw new FileActionException("Insufficient data for file");
         }
 
         driveFileCacheService.save(driveFile);
-
         return driveFile.getId();
     }
 
@@ -69,8 +58,9 @@ public class FileManagementService {
      * @param id id of file to delete
      * @param uploader file uploader username
      */
+    @Transactional
     public void handleFileDeletion(long id, String uploader) {
-        if (!accessHelper.isOwner(id,  uploader))
+        if (!accessHelper.isOwner(id, uploader))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
@@ -78,33 +68,38 @@ public class FileManagementService {
         try {
             DriveFile driveFile = driveFileCacheService.getDriveFileById(id);
             driveFileCacheService.deleteDriveFile(driveFile);
-            Files.delete(Path.of(driveFile.getPath()));
+
+            minioService.deleteFile(driveFile.getPath(), uploader);
         } catch (IOException ex) {
             throw new FileActionException("Failed to delete file");
+        } catch (InsufficientDataException ex) {
+            throw new FileActionException("Insufficient data for file");
         }
     }
 
     /**
-     * Finds files in given folder
-     * @param name uploader username (used if folderId is null)
-     * @param folderId id of folder to search files in
-     * @return DTO List of files in given folder
+     * Handles process of downloading the file by streaming Base64 into given OutputStream
+     * @param fileId id of file to download
+     * @param username username of download issuer (TEMPORAL: it will be replaced when file sharing will be introduced)
+     * @param out Servlet OutputStream
      */
-    public List<FileResponseDto> getFiles(String name, @Nullable Long folderId) {
-        if (folderId != null){
-            return driveFileCacheService
-                    .getFilesFromFolder(folderId)
-                    .stream()
-                    .map(fileResponseMapper::toDto)
-                    .toList();
+    public void handleFileDownload(long fileId, String username, OutputStream out) {
+        DriveFile driveFile = driveFileCacheService.getDriveFileById(fileId);
+
+        if (!accessHelper.isOwner(driveFile, username))
+        {
+            throw new AccessDeniedException("You are not owner of this file");
         }
 
-
-
-        return driveFileCacheService
-                .getParentlessFiles(name)
-                .stream()
-                .map(fileResponseMapper::toDto)
-                .toList();
+        try {
+            minioService
+                    .downloadFile(driveFile.getPath(), username, out);
+        } catch (IOException exception) {
+            log.warn("Failed to download file {}, reason: {}", driveFile.getPath(), exception.getMessage());
+            throw new FileActionException("Failed to download file");
+        } catch (InsufficientDataException ex) {
+            log.warn("Failed to download file, insufficient data for file {}", driveFile.getPath());
+            throw new FileActionException("Insufficient data for file");
+        }
     }
 }

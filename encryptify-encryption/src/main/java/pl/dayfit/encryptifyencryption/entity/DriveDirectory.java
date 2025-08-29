@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,9 @@ public class DriveDirectory {
 
     @Column(nullable = false)
     private long uploaderId;
+
+    @Column(nullable = false)
+    private Instant creationDate;
 
     @OneToMany(fetch =  FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "parent")
     private List<DriveFile> files;

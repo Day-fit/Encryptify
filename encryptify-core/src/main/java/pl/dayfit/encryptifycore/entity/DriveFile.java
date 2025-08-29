@@ -31,7 +31,7 @@ public class DriveFile {
     private String fileSize;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private DriveDirectory parent;
+    private DriveFolder parent;
 
     @Column(nullable = false)
     private String path;

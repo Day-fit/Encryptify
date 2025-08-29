@@ -3,6 +3,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
@@ -10,6 +11,7 @@ import pl.dayfit.encryptifyauth.configuration.EmailCodeConfigurationProperties;
 import pl.dayfit.encryptifyauth.event.EmailAuthenticatedEvent;
 import pl.dayfit.encryptifyauth.event.EmailVerificationCodeEvent;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
+import pl.dayfit.encryptifyauth.event.UserReadyForSetupEvent;
 import pl.dayfit.encryptifyauth.exception.NoUniqueCodeException;
 
 import java.security.SecureRandom;
@@ -25,13 +27,15 @@ public class EmailCommunicationService {
 
     @Qualifier("noTransactionsRedisTemplate")
     private final StringRedisTemplate stringRedisTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public EmailCommunicationService(EncryptifyUserCacheService encryptifyUserCacheService, RabbitTemplate rabbitTemplate, SecureRandom secureRandom, EmailCodeConfigurationProperties emailCodeConfigurationProperties, StringRedisTemplate stringRedisTemplate) {
+    public EmailCommunicationService(EncryptifyUserCacheService encryptifyUserCacheService, RabbitTemplate rabbitTemplate, SecureRandom secureRandom, EmailCodeConfigurationProperties emailCodeConfigurationProperties, StringRedisTemplate stringRedisTemplate, ApplicationEventPublisher applicationEventPublisher) {
         this.encryptifyUserCacheService = encryptifyUserCacheService;
         this.rabbitTemplate = rabbitTemplate;
         this.secureRandom = secureRandom;
         this.emailCodeConfigurationProperties = emailCodeConfigurationProperties;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     /**
@@ -52,6 +56,9 @@ public class EmailCommunicationService {
                                         generateCode(username)
                                 )
                 );
+
+        applicationEventPublisher
+                .publishEvent(new UserReadyForSetupEvent(username));
     }
 
     /**

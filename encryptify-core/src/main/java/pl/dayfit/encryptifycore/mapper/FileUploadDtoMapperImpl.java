@@ -1,35 +1,48 @@
 package pl.dayfit.encryptifycore.mapper;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
-import pl.dayfit.encryptifycore.configuration.FilesConfigurationProperties;
+import pl.dayfit.encryptifycore.cacheservice.DriveFolderCacheService;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.entity.DriveFile;
+import pl.dayfit.encryptifycore.entity.DriveFolder;
 
-import java.io.File;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-@EnableConfigurationProperties(FilesConfigurationProperties.class)
 public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
-    private final FilesConfigurationProperties filesConfigurationProperties;
+    private final DriveFolderCacheService driveFolderCacheService;
 
     @Override
     public DriveFile toDestination(FileRequestDto fileRequestDto, String uploader) {
-        UUID uuid = UUID.randomUUID();
+        DriveFolder driveFolder = null;
+
+        if (fileRequestDto.folderId() != null)
+        {
+            driveFolder = driveFolderCacheService.getDriveDirectoryById(fileRequestDto.folderId());
+        }
+
+        final String name = fileRequestDto.name();
         DriveFile driveFile = new DriveFile();
 
-        byte[] bytes = Base64.getDecoder().decode(fileRequestDto.base64Content());
+        byte[] bytes = Base64.getDecoder().decode(fileRequestDto.base64Content()); //Decoding to save 33% of space
 
-        driveFile.setUuid(uuid);
-        driveFile.setName(fileRequestDto.name());
+        String path = "";
+
+        if (driveFolder != null)
+        {
+            path = driveFolder.getPath();
+            driveFile.setParent(driveFolder);
+        }
+
+        driveFile.setUuid(UUID.randomUUID());
+        driveFile.setName(name);
         driveFile.setUploader(uploader);
         driveFile.setUploadDate(Instant.now());
-        driveFile.setPath(filesConfigurationProperties.getSavePath() + File.separator + uuid);
+        driveFile.setPath(path + name);
         driveFile.setFileSize(
                 formatBytes(bytes.length)
         );

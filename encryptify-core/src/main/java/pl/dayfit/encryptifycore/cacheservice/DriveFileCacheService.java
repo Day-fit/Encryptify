@@ -5,13 +5,12 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifycore.entity.DriveFile;
+import pl.dayfit.encryptifycore.entity.DriveFolder;
 import pl.dayfit.encryptifycore.repository.DriveFileRepository;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -57,23 +56,31 @@ public class DriveFileCacheService {
         cache.put(result.getUploader(), result);
     }
 
-    public void deleteDriveFile(Long id)
+    @SuppressWarnings("unused")
+    public void deleteDriveFile(Long id) //potentially useful in the future
     {
         DriveFile driveFile = driveFileRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("File not found"));
 
         Cache cache = cacheManager.getCache("files");
         Cache folderCache = cacheManager.getCache("folder.files");
+        Cache parentCache = cacheManager.getCache("parentless.files");
+
+        if (driveFile.getParent() == null && parentCache != null)
+        {
+            parentCache.evict(parentCache);
+        }
 
         if(cache != null)
         {
             cache.evict(id);
         }
 
-        if(folderCache != null)
+        DriveFolder parent = driveFile.getParent();
+
+        if(folderCache != null && parent != null)
         {
-            folderCache.evict(driveFile.getParent()
-                    .getId());
+            folderCache.evict(parent.getId());
         }
 
         driveFileRepository.deleteById(id);
@@ -83,21 +90,16 @@ public class DriveFileCacheService {
             {
                     @CacheEvict(key = "#driveFile.id", value = "files"),
                     @CacheEvict(key = "#driveFile.parent.id", value = "folder.files"),
-                    @CacheEvict(key = "#driveFile.uploader", value = "parentless.files")
             })
     public void deleteDriveFile(DriveFile driveFile)
     {
+        Cache parentCache = cacheManager.getCache("parentless.files");
+
+        if (parentCache != null)
+        {
+            parentCache.evict(driveFile.getUploader());
+        }
+
         driveFileRepository.delete(driveFile);
-    }
-
-    @Cacheable(key = "#folderId", value = "folder.files")
-    public List<DriveFile> getFilesFromFolder(long folderId)
-    {
-        return driveFileRepository.findAllByParent_Id(folderId);
-    }
-
-    @Cacheable(key = "uploader", value = "parentless.files")
-    public List<DriveFile> getParentlessFiles(String uploader) {
-        return driveFileRepository.findAllByParentNullAndUploader(uploader);
     }
 }
