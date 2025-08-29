@@ -126,10 +126,12 @@ public class FolderManagementService {
         String[] pathFragments = folder.getPath()
                 .split("/");
 
-        pathFragments[pathFragments.length - 1] = folder.getName();
-
-        folder.setPath(pathFragments[pathFragments.length - 1]);
+        pathFragments[Math.max(0, pathFragments.length - 1)] = folder.getName();
+        String newPath = String.join("/", pathFragments) + "/";
+        folder.setPath(newPath);
         folder.setName(renameDto.newName());
+
+        minioService.renameFolder(newPath);
         driveFolderCacheService.save(folder);
     }
 

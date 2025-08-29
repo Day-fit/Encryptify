@@ -97,7 +97,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too large to upload");
+            throw new InsufficientDataException("File is too small to upload");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
@@ -120,7 +120,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too large to upload");
+            throw new InsufficientDataException("File is too small to upload");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
@@ -139,9 +139,13 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too large to upload");
+            throw new InsufficientDataException("File is too small to upload");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
+    }
+
+    public void renameFolder(String newPath) {
+        //TODO: to be implemented
     }
 }

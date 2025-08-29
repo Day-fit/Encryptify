@@ -23,7 +23,7 @@ public class DriveFileCacheService {
             put =
                     {
                             @CachePut(key = "#result.id", value = "files"),
-                            @CachePut(key = "result.parent.id", value = "folder.files")
+                            @CachePut(key = "#result.parent.id", value = "folder.files")
                     }
     )
     public DriveFile getDriveFileById(Long id)
@@ -68,7 +68,7 @@ public class DriveFileCacheService {
 
         if (driveFile.getParent() == null && parentCache != null)
         {
-            parentCache.evict(parentCache);
+            parentCache.evict(driveFile.getUploader());
         }
 
         if(cache != null)

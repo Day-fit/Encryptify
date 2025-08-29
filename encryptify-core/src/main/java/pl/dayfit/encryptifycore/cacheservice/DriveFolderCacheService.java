@@ -67,7 +67,7 @@ public class DriveFolderCacheService {
     @Caching(evict = {
             @CacheEvict(key = "#folder.id", value = "folder"),
             @CacheEvict(key = "#folder.id", value = "folder.files"),
-            @CacheEvict(key = "folder.id", value = "folder.folders")
+            @CacheEvict(key = "#folder.id", value = "folder.folders")
     })
     public void deleteDriveDirectory(DriveFolder folder) {
         long id = folder.getId();
