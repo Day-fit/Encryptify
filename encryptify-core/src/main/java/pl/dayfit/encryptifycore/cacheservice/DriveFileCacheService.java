@@ -5,6 +5,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifycore.entity.DriveFile;
@@ -20,10 +21,9 @@ public class DriveFileCacheService {
     private final CacheManager cacheManager;
 
     @Caching(
-            put =
+            cacheable =
                     {
-                            @CachePut(key = "#result.id", value = "files"),
-                            @CachePut(key = "#result.parent.id", value = "folder.files")
+                            @Cacheable(key = "#result.id", value = "files"),
                     }
     )
     public DriveFile getDriveFileById(Long id)
@@ -35,7 +35,6 @@ public class DriveFileCacheService {
     @Caching(put =
             {
                     @CachePut(key = "#driveFile.id", value = "files"),
-                    @CachePut(key = "#driveFile.parent.id", value = "folder.files")
             })
     public void save(DriveFile driveFile)
     {
@@ -43,7 +42,12 @@ public class DriveFileCacheService {
 
         if (result.getParent() != null)
         {
-            return;
+            Cache cache = cacheManager.getCache("folder.files");
+
+            if (cache != null)
+            {
+                cache.put(result.getParent().getId(), result);
+            }
         }
 
         Cache cache = cacheManager.getCache("parentless.files");
@@ -89,15 +93,27 @@ public class DriveFileCacheService {
     @Caching(evict =
             {
                     @CacheEvict(key = "#driveFile.id", value = "files"),
-                    @CacheEvict(key = "#driveFile.parent.id", value = "folder.files"),
             })
     public void deleteDriveFile(DriveFile driveFile)
     {
-        Cache parentCache = cacheManager.getCache("parentless.files");
-
-        if (parentCache != null)
+        if(driveFile.getParent() == null)
         {
-            parentCache.evict(driveFile.getUploader());
+            Cache cache = cacheManager.getCache("parentless.files");
+
+            if (cache != null)
+            {
+                cache.evict(driveFile.getUploader());
+            }
+
+            driveFileRepository.delete(driveFile);
+            return;
+        }
+
+        Cache cache = cacheManager.getCache("folder.files");
+
+        if (cache != null)
+        {
+            cache.evict(driveFile.getParent().getId());
         }
 
         driveFileRepository.delete(driveFile);

@@ -82,7 +82,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while uploading file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too large to upload");
+            throw new InsufficientDataException("Insufficient data for file upload");
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -99,7 +99,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too small to upload");
+            throw new InsufficientDataException("Insufficient data for file deletion");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
@@ -122,7 +122,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too small to upload");
+            throw new InsufficientDataException("Insufficient data for file deletion");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
@@ -139,11 +139,11 @@ public class MinioService {
         OutputStream base64Out = Base64.getEncoder().wrap(out)){
             response.transferTo(base64Out);
         } catch (IOException e) {
-            throw new IOException("Error while deleting file");
+            throw new IOException("Error while downloading file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too small to upload");
+            throw new InsufficientDataException("Insufficient data for file download");
         } catch (Exception e) {
-            throw new IllegalStateException("Internal error while deleting file");
+            throw new IllegalStateException("Internal error while downloading file");
         }
     }
 
@@ -196,12 +196,13 @@ public class MinioService {
     private List<Pair<String, String>> getPathsToChange(DriveFolder rootFolder, String newBasePath, String oldBasePath)
     {
         List<Pair<String, String>> result = new ArrayList<>();
-        List<DriveFolder> folders = rootFolder.getChildren();
+        List<DriveFolder> folders = new ArrayList<>();
         folders.add(rootFolder);
 
         while (!folders.isEmpty())
         {
             DriveFolder folder = folders.remove(0);
+            folders.addAll(folder.getChildren());
 
             result.addAll(
                     folder.getFiles()

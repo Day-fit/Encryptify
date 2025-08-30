@@ -256,7 +256,7 @@ public class FolderManagementService {
                         result.setName(folderName);
                         result.setUploader(username);
                         result.setParent(parent);
-                        result.setPath((parent == null ? "/" : parent.getPath() + "/") + folderName);
+                        result.setPath((parent == null ? null : parent.getPath() + "/") + folderName + "/");
                         result.setUuid(UUID.randomUUID());
                         result.setCreationDate(Instant.now());
 
