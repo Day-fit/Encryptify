@@ -122,7 +122,7 @@ public class MinioService {
         } catch (IOException e) {
             throw new IOException("Error while deleting file");
         } catch (InsufficientDataException e) {
-            throw new InsufficientDataException("File is too small to upload");
+            throw new InsufficientDataException("Insufficient data for batch file deletion");
         } catch (Exception e) {
             throw new IllegalStateException("Internal error while deleting file");
         }
