@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 public class DriveFileAccessHelper {
     private final DriveFileRepository driveFileRepository;
 
+    @SuppressWarnings("unused")
     public boolean isOwner(DriveFile driveFile, String uploader)
     {
         return driveFile.getUploader().equals(uploader);

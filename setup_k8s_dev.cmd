@@ -14,7 +14,9 @@ helm upgrade --install data helm/Data ^
     --set global.postgresql.auth.password=%DB_PASSWORD% ^
     --set global.postgresql.auth.postgresPassword=%DB_SU_PASSWORD% ^
     --set global.postgresql.auth.database=%DB_NAME% ^
-    --set redis.auth.password=%REDIS_PASSWORD%
+    --set redis.auth.password=%REDIS_PASSWORD% ^
+    --set minio.auth.rootUser=%MINIO_USERNAME% ^
+    --set minio.auth.rootPassword=%MINIO_PASSWORD%
 
 helm upgrade --install communication helm/Communication ^
     --namespace communication ^

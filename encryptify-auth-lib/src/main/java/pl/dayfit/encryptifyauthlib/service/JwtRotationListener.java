@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import pl.dayfit.encryptifyauthlib.configuration.JWKSConfigurationProperties;
 import pl.dayfit.encryptifyauthlib.dto.JwksRotationEvent;
@@ -31,6 +32,8 @@ import java.time.Instant;
 @SuppressWarnings("unused")
 public class JwtRotationListener {
     private final JWKSConfigurationProperties jwksConfigurationProperties;
+    private final JwtClaimsService jwtClaimsService;
+
     @Getter
     private JWKSet jwks;
 
@@ -38,8 +41,11 @@ public class JwtRotationListener {
     private void init()
     {
         try {
+            jwtClaimsService.setJwkSetSupplier(this::getJwks);
             updateJwks();
             log.info("JWKS synchronization went successful");
+        } catch (ResourceAccessException ex) {
+            log.warn("JWKS synchronization went failed, given uri is unreachable", ex);
         } catch (SyncFailedException ex) {
             log.warn("Could not update JWKS", ex);
         } catch (ParseException ex) {
@@ -71,10 +77,11 @@ public class JwtRotationListener {
 
     /**
      * Fetches current JWK Set of public keys, handles message NACK management
-     * @throws SyncFailedException when method cannot handle JWKS sync (Bad response)
+     * @throws SyncFailedException when method cannot handle JWKS sync (response != 2XX)
+     * @throws ResourceAccessException when given uri is unreachable
      * @throws ParseException when JWKSet parse fails
      */
-    private void updateJwks() throws SyncFailedException, ParseException
+    private void updateJwks() throws SyncFailedException, ParseException, ResourceAccessException
     {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> response = restTemplate.getForEntity(

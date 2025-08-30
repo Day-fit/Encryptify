@@ -42,7 +42,8 @@ stringData:
         { "name": "service.encryption", "vhost": "/",  "durable": true },
         { "name": "service.auth", "vhost": "/", "durable": true },
         { "name": "service.email", "vhost": "/", "durable": true },
-        { "name": "email.sender", "vhost": "/", "durable": true }
+        { "name": "email.sender", "vhost": "/", "durable": true },
+        { "name": "minio.configurer", "vhost": "/", "durable": true}
       ],
       "exchanges": [
         { "name": "user.events", "vhost": "/", "type": "topic", "durable": true },
@@ -62,6 +63,13 @@ stringData:
           "destination": "service.auth",
           "destination_type": "queue",
           "routing_key": "user.verified"
+        },
+        {
+          "source": "user.events",
+          "vhost": "/",
+          "destination": "minio.configurer",
+          "destination_type": "queue",
+          "routing_key": "user.setup"
         },
         {
           "source": "auth.rotation",

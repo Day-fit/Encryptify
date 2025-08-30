@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.dayfit.encryptifyauthlib.configuration.CookieConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
@@ -32,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequiredArgsConstructor
 @EnableConfigurationProperties(JwtConfigurationProperties.class)
+@RequestMapping("/api/v1/auth")
 public class AuthenticationController {
     private final EncryptifyUserService encryptifyUserService;
     private final JwtService jwtService;
@@ -54,7 +56,7 @@ public class AuthenticationController {
         isSecured = jwtConfigurationProperties.isUseSecureCookies();
     }
 
-    @PostMapping("/api/v1/login")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto, HttpServletResponse response)
     {
         String username = encryptifyUserService.handleLogin(dto);
@@ -97,14 +99,14 @@ public class AuthenticationController {
         return ResponseEntity.ok(Map.of("message", "Login went successfully"));
     }
 
-    @PostMapping("/api/v1/register")
+    @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequestDTO dto)
     {
         encryptifyUserService.handleRegister(dto);
         return ResponseEntity.ok(Map.of("message", "Sign up successfully, email with confirmation link was sent to your email"));
     }
 
-    @PostMapping("/api/v1/logout")
+    @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response)
     {
         ResponseCookie accessToken = ResponseCookie.from(accessTokenName, "")
@@ -127,7 +129,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(Map.of("message", "Logout successfully"));
     }
 
-    @PostMapping("/api/v1/refresh")
+    @PostMapping("/refresh")
     public ResponseEntity<?> refreshAccessToken(HttpServletRequest request, HttpServletResponse response)
     {
         Cookie[] cookies = request.getCookies();

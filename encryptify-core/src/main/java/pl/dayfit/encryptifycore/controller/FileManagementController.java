@@ -1,35 +1,51 @@
 package pl.dayfit.encryptifycore.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pl.dayfit.encryptifyauthlib.principal.UserPrincipal;
 import pl.dayfit.encryptifycore.dto.FileDeleteDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
+import pl.dayfit.encryptifycore.exception.FileActionException;
 import pl.dayfit.encryptifycore.service.FileManagementService;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/file")
 public class FileManagementController {
     private final FileManagementService fileManagementService;
 
-    @PostMapping("/api/v1/upload-file")
-    public ResponseEntity<?> handleUploadingFile(@RequestBody FileRequestDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
+    @PostMapping("/upload")
+    public ResponseEntity<Map<String, Long>> handleUploadingFile(@RequestBody FileRequestDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
-        fileManagementService.handleFileUpload(dto, userPrincipal.getName());
-        return ResponseEntity.ok(Map.of("message", "Successfully uploaded file"));
+        long id = fileManagementService.handleFileUpload(dto, userPrincipal.getName());
+        return ResponseEntity
+                .ok(Map.of("id", id));
     }
 
-    @DeleteMapping("/api/v1/delete-file")
+    @GetMapping("/download")
+    public void handleFileDownload (@RequestParam long fileId, @AuthenticationPrincipal UserPrincipal userPrincipal, HttpServletResponse response)
+    {
+        response.setContentType("application/octet-stream");
+
+        try (OutputStream out = response.getOutputStream()) {
+            fileManagementService.handleFileDownload(fileId, userPrincipal.getName(), out);
+        } catch (IOException ex) {
+            throw new FileActionException("Failed to download a file. Try again later");
+        }
+    }
+
+    @DeleteMapping("/delete")
     public ResponseEntity<?> handleDeletingFile(@RequestBody FileDeleteDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
         fileManagementService.handleFileDeletion(dto.id(), userPrincipal.getName());
-        return ResponseEntity.ok(Map.of("message", "Successfully deleted file"));
+        return ResponseEntity
+                .ok(Map.of("message", "Successfully deleted file"));
     }
 }

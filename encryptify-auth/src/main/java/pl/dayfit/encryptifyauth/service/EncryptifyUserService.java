@@ -1,6 +1,8 @@
 package pl.dayfit.encryptifyauth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
+import pl.dayfit.encryptifyauth.event.UserReadyForSetupEvent;
 import pl.dayfit.encryptifyauth.exception.UserAlreadyExistsException;
 import pl.dayfit.encryptifyauth.helper.HashHelper;
 import pl.dayfit.encryptifyauth.repository.UserRepository;
@@ -35,6 +38,8 @@ public class EncryptifyUserService {
     private final HashHelper hashHelper;
     private final EmailCommunicationService emailCommunicationService;
     private final JwtConfigurationProperties jwtConfigurationProperties;
+    private final Environment environment;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Handles login logic
@@ -55,7 +60,10 @@ public class EncryptifyUserService {
     @Transactional
     public void handleRegister(RegisterRequestDTO dto)
     {
-        if(userRepository.existsByEmailHashLookup(dto.email()) || userRepository.existsByUsername(dto.username()))
+        String email = dto.email();
+        String username = dto.username();
+
+        if(userRepository.existsByEmailHashLookup(email) || userRepository.existsByUsername(username))
         {
             throw new UserAlreadyExistsException("User already exists");
         }
@@ -63,9 +71,9 @@ public class EncryptifyUserService {
         cacheService
                 .saveUser(new EncryptifyUser(
                         null,
-                        passwordEncoder.encode(dto.email()),
-                        hashHelper.generateEmailLookup( dto.email()),
-                        dto.username(),
+                        passwordEncoder.encode(email),
+                        hashHelper.generateEmailLookup(email),
+                        username,
                         passwordEncoder.encode(dto.password()),
                         Instant.now(),
                         false,
@@ -75,8 +83,15 @@ public class EncryptifyUserService {
                 )
         );
 
+        if (environment.matchesProfiles("no-email"))
+        {
+            applicationEventPublisher
+                    .publishEvent(new UserReadyForSetupEvent(username));
+            return;
+        }
+
         emailCommunicationService
-                .handleVerificationSending(dto.username(),  dto.email());
+                .handleVerificationSending(username, email);
     }
 
     /**
