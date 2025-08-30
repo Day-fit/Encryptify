@@ -21,8 +21,10 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -45,7 +47,7 @@ public class FolderManagementService {
         String name = dto.folderName();
         DriveFolder folder = new DriveFolder();
 
-        if (repository.existInSameParentAndName(dto.parentId(), name))
+        if (repository.findInSameParentAndNameAndOwner(dto.parentId(), name, username).isPresent())
         {
             throw new DuplicateKeyException("Folder with name " + name + " already exists");
         }
@@ -122,17 +124,47 @@ public class FolderManagementService {
         {
             throw new AccessDeniedException("You are not allowed to rename this folder");
         }
-
-        String[] pathFragments = folder.getPath()
+        String oldPath = folder.getPath();
+        String[] pathFragments = oldPath
                 .split("/");
 
-        pathFragments[Math.max(0, pathFragments.length - 1)] = folder.getName();
+        String newName = renameDto.newName();
+        pathFragments[pathFragments.length - 1] = newName;
         String newPath = String.join("/", pathFragments) + "/";
-        folder.setPath(newPath);
-        folder.setName(renameDto.newName());
 
-        minioService.renameFolder(newPath);
+        minioService.renameFolder(newPath, oldPath, folder);
+
+        String trimmedPath = newPath.endsWith("/") ? newPath.substring(0, newPath.length() - 1) : newPath;
+        int lastSlash = trimmedPath.lastIndexOf('/');
+        String basePath = lastSlash == -1 ? "" : trimmedPath.substring(0, lastSlash + 1);
+
+        DriveFolder parent = createFoldersInPath(basePath, username);
+
+        folder.setParent(parent);
+        folder.setPath(newPath);
+        folder.setName(newName);
+
         driveFolderCacheService.save(folder);
+
+        List<DriveFolder> toSearch = new ArrayList<>();
+        toSearch.add(folder);
+
+        while (!toSearch.isEmpty())
+        {
+            DriveFolder searchFolder = driveFolderCacheService.getDriveDirectoryById(toSearch.remove(0).getId());
+            List<DriveFile> files = searchFolder.getFiles();
+            toSearch.addAll(searchFolder.getChildren());
+
+            if (files.isEmpty())
+            {
+                continue;
+            }
+
+            files.forEach(file ->
+                    file.setPath(newPath + file.getPath().substring(oldPath.length())));
+
+            driveFolderCacheService.save(searchFolder);
+        }
     }
 
     /**
@@ -187,5 +219,61 @@ public class FolderManagementService {
         );
 
         return result;
+    }
+
+    /**
+     * Creates folders in given path
+     * @param path String representing folder path to be created
+     * @param username folders owner username
+     * @return last created folder, null if there were no folders created
+     */
+    private DriveFolder createFoldersInPath(String path, String username)
+    {
+        String[] folderNames = path.split("/");
+        folderNames = Arrays.stream(folderNames)
+                .filter(s -> !s.isEmpty())
+                .toArray(String[]::new);
+
+        if (folderNames.length == 0)
+        {
+            return null;
+        }
+
+        AtomicReference<DriveFolder> previousFolder = new AtomicReference<>();
+        Arrays.stream(folderNames)
+                .forEach(folderName ->
+                {
+                    DriveFolder parent = previousFolder.get();
+                    DriveFolder newFolder = repository.findInSameParentAndNameAndOwner(
+                            parent == null
+                                    ? null
+                                    : parent.getId(),
+                            folderName,
+                            username
+                    ).orElseGet(() -> {
+                        DriveFolder result = new DriveFolder();
+
+                        result.setName(folderName);
+                        result.setUploader(username);
+                        result.setParent(parent);
+                        result.setPath((parent == null ? "/" : parent.getPath() + "/") + folderName);
+                        result.setUuid(UUID.randomUUID());
+                        result.setCreationDate(Instant.now());
+
+                        return result;
+                    });
+
+                    if(parent != null) {
+                        parent.getChildren().add(newFolder);
+                        driveFolderCacheService.save(parent);
+                    } else {
+                        driveFolderCacheService.save(newFolder);
+                        repository.flush();
+                    }
+
+                    previousFolder.set(newFolder);
+                });
+
+        return previousFolder.get();
     }
 }

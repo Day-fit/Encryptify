@@ -6,13 +6,14 @@ import org.springframework.stereotype.Repository;
 import pl.dayfit.encryptifycore.entity.DriveFolder;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DriveFolderRepository extends JpaRepository<DriveFolder, Long> {
-    @Query("SELECT COUNT(f) > 0 FROM DriveFolder f " +
-            "WHERE (:parentId IS NULL AND f.parent.id IS NULL AND f.name = :folderName)" +
-            "OR (f.parent.id = :parentId AND f.name = :folderName)")
-    boolean existInSameParentAndName(Long parentId, String folderName);
+    @Query("SELECT f FROM DriveFolder f " +
+            "WHERE (:parentId IS NULL AND f.parent.id IS NULL AND f.name = :folderName AND f.uploader = :owner)" +
+            "OR (f.parent.id = :parentId AND f.name = :folderName AND f.uploader = :owner)")
+    Optional<DriveFolder> findInSameParentAndNameAndOwner(Long parentId, String folderName, String owner);
 
     List<DriveFolder> findAllByParentNullAndUploader(String uploader);
 }

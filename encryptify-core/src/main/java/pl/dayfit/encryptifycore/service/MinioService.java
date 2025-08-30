@@ -7,16 +7,16 @@ import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
 import pl.dayfit.encryptifycore.entity.DriveFile;
+import pl.dayfit.encryptifycore.entity.DriveFolder;
 import pl.dayfit.encryptifycore.event.UserReadyForSetupEvent;
+import pl.dayfit.encryptifycore.exception.FileActionException;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -35,34 +35,36 @@ public class MinioService {
                         .build()
         );
 
-        if(alreadyExist)
+        if(!alreadyExist)
         {
-            Iterable<Result<Item>> results =  minioClient.listObjects(
-                    ListObjectsArgs.builder()
+            minioClient.makeBucket(
+                    MakeBucketArgs.builder()
                             .bucket(username)
-                            .recursive(true)
                             .build()
             );
 
-            List<DeleteObject> toDelete = new ArrayList<>();
-
-            for (Result<Item> result : results)
-            {
-                Item item = result.get();
-                toDelete.add(new DeleteObject(item.objectName()));
-            }
-
-            minioClient.removeObjects(
-                    RemoveObjectsArgs.builder()
-                            .bucket(username)
-                            .objects(toDelete)
-                            .build()
-            );
+            return;
         }
 
-        minioClient.makeBucket(
-                MakeBucketArgs.builder()
+        Iterable<Result<Item>> results =  minioClient.listObjects(
+                ListObjectsArgs.builder()
                         .bucket(username)
+                        .recursive(true)
+                        .build()
+        );
+
+        List<DeleteObject> toDelete = new ArrayList<>();
+
+        for (Result<Item> result : results)
+        {
+            Item item = result.get();
+            toDelete.add(new DeleteObject(item.objectName()));
+        }
+
+        minioClient.removeObjects(
+                RemoveObjectsArgs.builder()
+                        .bucket(username)
+                        .objects(toDelete)
                         .build()
         );
     }
@@ -145,7 +147,73 @@ public class MinioService {
         }
     }
 
-    public void renameFolder(String newPath) {
-        //TODO: to be implemented
+    /**
+     * Handles process of renaming folder. Rollback will be introduced later
+     * @param newBasePath name of the new base path
+     * @param oldBasePath name of the old base path
+     * @param folder instance of the DriveFolder Entity
+     * @throws FileActionException when exception is thrown during execution
+     */
+    public void renameFolder(String newBasePath, String oldBasePath, DriveFolder folder) {
+        String uploader = folder.getUploader();
+        List<Pair<String, String>> pathPairs = getPathsToChange(folder, newBasePath, oldBasePath);
+        List<String> toDelete = new ArrayList<>();
+
+        try {
+            for (Pair<String, String> pair : pathPairs)
+            {
+                    String oldPath = pair.getLeft();
+                    minioClient.copyObject(
+                            CopyObjectArgs.builder()
+                                    .bucket(folder.getUploader())
+                                    .object(pair.getRight())
+                                    .source(
+                                            CopySource.builder()
+                                                    .bucket(uploader)
+                                                    .object(oldPath)
+                                                    .build()
+                                    )
+                                    .build()
+                    );
+
+                    toDelete.add(oldPath);
+            }
+
+            deleteFiles(uploader, toDelete.toArray(String[]::new));
+        } catch (Exception e) {
+            log.warn("Error while renaming folder. Reason: {}", e.getMessage());
+            throw new FileActionException("Error while renaming folder. Try again later.");
+        }
+    }
+
+    /**
+     * Scans folder and subfolders for files, calculates new files paths
+     * @param rootFolder instance of DriveFolder that represents root folder
+     * @param newBasePath String representing new base path for folder files
+     * @param oldBasePath String representing old base path of folder
+     * @return Pair of paths where left is old path, and right is new path
+     */
+    private List<Pair<String, String>> getPathsToChange(DriveFolder rootFolder, String newBasePath, String oldBasePath)
+    {
+        List<Pair<String, String>> result = new ArrayList<>();
+        List<DriveFolder> folders = rootFolder.getChildren();
+        folders.add(rootFolder);
+
+        while (!folders.isEmpty())
+        {
+            DriveFolder folder = folders.remove(0);
+
+            result.addAll(
+                    folder.getFiles()
+                            .stream()
+                            .map(file ->
+                            {
+                                String oldPath = file.getPath();
+                                return Pair.of(oldPath, newBasePath + oldPath.substring(oldBasePath.length()));
+                            }).toList()
+            );
+        }
+
+        return result;
     }
 }
