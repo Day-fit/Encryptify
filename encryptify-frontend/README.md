@@ -181,7 +181,8 @@ npm run lint     # Run ESLint
 The frontend integrates with the following backend services:
 
 - **Auth Service** (Port 8083): User authentication and management
-- **Core Service** (Port 8081): File and folder operations
+- **Core Service** (Port 8080): File and folder operations
+- **Encryption Service** (Port 8081): Key sharing and other encryption related operations
 - **Email Service** (Port 8082): Email notifications
 
 ### Data Flow

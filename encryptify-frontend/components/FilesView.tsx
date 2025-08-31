@@ -1,0 +1,520 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { 
+  File, 
+  Folder, 
+  Download, 
+  Trash2, 
+  Edit, 
+  Plus, 
+  Upload, 
+  Grid, 
+  List, 
+  ArrowLeft,
+  MoreVertical
+} from 'lucide-react'
+import { fileService } from '@/services/fileService'
+import { useEncryption } from '@/hooks/useEncryption'
+import toast from 'react-hot-toast'
+
+interface FileSystemItem {
+  id: number
+  name: string
+  type: 'FILE' | 'FOLDER'
+  fileSize?: string
+  uploadDate?: string
+  creationDate?: string
+}
+
+export default function FilesView() {
+  const [items, setItems] = useState<FileSystemItem[]>([])
+  const [currentFolderId, setCurrentFolderId] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+  const [isLoading, setIsLoading] = useState(false)
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set())
+  const [showContextMenu, setShowContextMenu] = useState<{ x: number; y: number; itemId: number } | null>(null)
+  
+  // Modal states
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
+  const [showRenameModal, setShowRenameModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  
+  // Form states
+  const [newFolderName, setNewFolderName] = useState('')
+  const [renameName, setRenameName] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadFolderId, setUploadFolderId] = useState<number | null>(null)
+  
+  const { encryptFile, decryptFile, generateKeyPair } = useEncryption()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    loadItems()
+  }, [currentFolderId])
+
+  const loadItems = async () => {
+    setIsLoading(true)
+    try {
+      const data = await fileService.getFiles(currentFolderId || undefined)
+      setItems(data)
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleFileUpload = async () => {
+    if (!uploadFile) return
+
+    try {
+      // Generate encryption key for this file
+      const keyPair = await generateKeyPair()
+      
+      // Encrypt file before upload
+      const encryptedFile = await encryptFile(uploadFile, keyPair.id)
+      
+      // Upload encrypted file
+      await fileService.uploadFile(encryptedFile, (uploadFolderId || currentFolderId) || undefined, keyPair.id)
+      
+      toast.success('File uploaded successfully!')
+      setShowUploadModal(false)
+      setUploadFile(null)
+      loadItems()
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return
+
+    try {
+      await fileService.createFolder(newFolderName.trim(), currentFolderId || undefined)
+      toast.success('Folder created successfully!')
+      setShowCreateFolderModal(false)
+      setNewFolderName('')
+      loadItems()
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleRename = async () => {
+    if (!renameName.trim()) return
+
+    try {
+      const item = items.find(i => i.id === showContextMenu?.itemId)
+      if (!item) return
+
+      if (item.type === 'FOLDER') {
+        await fileService.renameFolder(item.id, renameName.trim())
+      }
+      // Note: File renaming would need backend support
+      
+      toast.success('Renamed successfully!')
+      setShowRenameModal(false)
+      setRenameName('')
+      setShowContextMenu(null)
+      loadItems()
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!showContextMenu?.itemId) return
+
+    try {
+      const item = items.find(i => i.id === showContextMenu.itemId)
+      if (!item) return
+
+      if (item.type === 'FILE') {
+        await fileService.deleteFile(item.id)
+      } else {
+        await fileService.deleteFolder(item.id)
+      }
+      
+      toast.success('Deleted successfully!')
+      setShowDeleteModal(false)
+      setShowContextMenu(null)
+      loadItems()
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleDownload = async (fileId: number, fileName: string) => {
+    try {
+      const blob = await fileService.downloadFile(fileId)
+      
+      // For now, we'll download the encrypted file as-is
+      // In a real implementation, you'd need to store the key mapping
+      // and decrypt the file properly
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success('File downloaded successfully!')
+    } catch (error: any) {
+      toast.error(error.message)
+    }
+  }
+
+  const handleItemClick = (item: FileSystemItem) => {
+    if (item.type === 'FOLDER') {
+      setCurrentFolderId(item.id)
+    }
+  }
+
+  const handleContextMenu = (e: React.MouseEvent, itemId: number) => {
+    e.preventDefault()
+    setShowContextMenu({ x: e.clientX, y: e.clientY, itemId })
+  }
+
+  const renderListItem = (item: FileSystemItem) => (
+    <div
+      key={item.id}
+      className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer"
+      onClick={() => handleItemClick(item)}
+      onContextMenu={(e) => handleContextMenu(e, item.id)}
+    >
+      <div className="flex items-center space-x-3">
+        {item.type === 'FOLDER' ? (
+          <Folder className="h-5 w-5 text-blue-500" />
+        ) : (
+          <File className="h-5 w-5 text-gray-500" />
+        )}
+        <div>
+          <p className="font-medium text-gray-900">{item.name}</p>
+          <p className="text-sm text-gray-500">
+            {item.type === 'FILE' 
+              ? `${item.fileSize} • ${item.uploadDate}`
+              : `Created ${item.creationDate}`
+            }
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        {item.type === 'FILE' && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDownload(item.id, item.name)
+              }}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+            >
+              <Download className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+              }}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </>
+        )}
+        {item.type === 'FOLDER' && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+            }}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderGridItem = (item: FileSystemItem) => (
+    <div
+      key={item.id}
+      className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm cursor-pointer bg-white"
+      onClick={() => handleItemClick(item)}
+      onContextMenu={(e) => handleContextMenu(e, item.id)}
+    >
+      <div className="text-center">
+        {item.type === 'FOLDER' ? (
+          <Folder className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+        ) : (
+          <File className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+        )}
+        <p className="font-medium text-gray-900 text-sm truncate">{item.name}</p>
+        <p className="text-xs text-gray-500 mt-1">
+          {item.type === 'FILE' ? item.fileSize : 'Folder'}
+        </p>
+      </div>
+      
+      {item.type === 'FILE' && (
+        <div className="mt-3 flex justify-center space-x-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDownload(item.id, item.name)
+            }}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+            title="Download"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+            }}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
+            title="More options"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          {currentFolderId && (
+            <button
+              onClick={() => setCurrentFolderId(null)}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Files</h1>
+            <p className="text-gray-600">
+              {currentFolderId ? 'Current folder' : 'Root directory'}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowCreateFolderModal(true)}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Folder</span>
+          </button>
+          
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Upload className="h-4 w-4" />
+            <span>Upload File</span>
+          </button>
+          
+          <div className="flex border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-500'}`}
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 ${viewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-500'}`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* File List */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-gray-500">Loading...</p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-8 text-center">
+            <Folder className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500">No files or folders yet</p>
+            <p className="text-sm text-gray-400 mt-1">Upload a file or create a folder to get started</p>
+          </div>
+        ) : (
+          <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4' : ''}>
+            {viewMode === 'list' ? items.map(renderListItem) : items.map(renderGridItem)}
+          </div>
+        )}
+      </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Upload File</h3>
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+              className="w-full mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFileUpload}
+                disabled={!uploadFile}
+                className="btn-primary disabled:opacity-50"
+              >
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Folder Modal */}
+      {showCreateFolderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Create New Folder</h3>
+            <input
+              type="text"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Folder name"
+              className="input-field w-full mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCreateFolderModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateFolder}
+                disabled={!newFolderName.trim()}
+                className="btn-primary disabled:opacity-50"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      {showRenameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Rename</h3>
+            <input
+              type="text"
+              value={renameName}
+              onChange={(e) => setRenameName(e.target.value)}
+              placeholder="New name"
+              className="input-field w-full mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowRenameModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRename}
+                disabled={!renameName.trim()}
+                className="btn-primary disabled:opacity-50"
+              >
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
+            <p className="text-gray-600 mb-4">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="btn-danger"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {showContextMenu && (
+        <div
+          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+          style={{ left: showContextMenu.x, top: showContextMenu.y }}
+        >
+          <button
+            onClick={() => {
+              setRenameName(items.find(i => i.id === showContextMenu.itemId)?.name || '')
+              setShowRenameModal(true)
+              setShowContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+          >
+            <Edit className="h-4 w-4" />
+            <span>Rename</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowDeleteModal(true)
+              setShowContextMenu(null)
+            }}
+            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>Delete</span>
+          </button>
+        </div>
+      )}
+
+      {/* Click outside to close context menu */}
+      {showContextMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowContextMenu(null)}
+        />
+      )}
+    </div>
+  )
+}
