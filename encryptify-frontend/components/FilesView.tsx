@@ -47,7 +47,7 @@ export default function FilesView() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadFolderId, setUploadFolderId] = useState<number | null>(null)
   
-  const { encryptFile, decryptFile, generateKeyPair } = useEncryption()
+  const { isInitialized, encryptFile, decryptFile, generateFileKey, storeFileKeyMapping, getFileKeyId } = useEncryption()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -57,6 +57,8 @@ export default function FilesView() {
   const loadItems = async () => {
     setIsLoading(true)
     try {
+      // Clear items first to prevent duplication
+      setItems([])
       const data = await fileService.getFiles(currentFolderId || undefined)
       setItems(data)
     } catch (error: any) {
@@ -68,16 +70,23 @@ export default function FilesView() {
 
   const handleFileUpload = async () => {
     if (!uploadFile) return
+    if (!isInitialized) {
+      toast.error('Encryption service not initialized. Please wait or refresh.')
+      return
+    }
 
     try {
       // Generate encryption key for this file
-      const keyPair = await generateKeyPair()
+      const keyId = await generateFileKey()
       
       // Encrypt file before upload
-      const encryptedFile = await encryptFile(uploadFile, keyPair.id)
+      const encryptedFile = await encryptFile(uploadFile, keyId)
       
       // Upload encrypted file
-      await fileService.uploadFile(encryptedFile, (uploadFolderId || currentFolderId) || undefined, keyPair.id)
+      const uploadResponse = await fileService.uploadFile(encryptedFile, (uploadFolderId || currentFolderId) || undefined, keyId)
+      
+      // Store the key mapping for this file
+      await storeFileKeyMapping(uploadResponse.id, keyId)
       
       toast.success('File uploaded successfully!')
       setShowUploadModal(false)
@@ -147,13 +156,25 @@ export default function FilesView() {
   }
 
   const handleDownload = async (fileId: number, fileName: string) => {
+    if (!isInitialized) {
+      toast.error('Encryption service not initialized. Please wait or refresh.')
+      return
+    }
     try {
       const blob = await fileService.downloadFile(fileId)
       
-      // For now, we'll download the encrypted file as-is
-      // In a real implementation, you'd need to store the key mapping
-      // and decrypt the file properly
-      const url = window.URL.createObjectURL(blob)
+      // Get the key ID for this file
+      const keyId = await getFileKeyId(fileId)
+      if (!keyId) {
+        toast.error('Encryption key not found for this file')
+        return
+      }
+      
+      // Decrypt the file
+      const decryptedBlob = await decryptFile(blob, keyId)
+      
+      // Download the decrypted file
+      const url = window.URL.createObjectURL(decryptedBlob)
       const a = document.createElement('a')
       a.href = url
       a.download = fileName
@@ -319,7 +340,8 @@ export default function FilesView() {
           
           <button
             onClick={() => setShowUploadModal(true)}
-            className="btn-primary flex items-center space-x-2"
+            disabled={!isInitialized}
+            className="btn-primary disabled:opacity-50 flex items-center space-x-2"
           >
             <Upload className="h-4 w-4" />
             <span>Upload File</span>
@@ -382,7 +404,7 @@ export default function FilesView() {
               </button>
               <button
                 onClick={handleFileUpload}
-                disabled={!uploadFile}
+                disabled={!uploadFile || !isInitialized}
                 className="btn-primary disabled:opacity-50"
               >
                 Upload
@@ -401,6 +423,11 @@ export default function FilesView() {
               type="text"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newFolderName.trim()) {
+                  handleCreateFolder()
+                }
+              }}
               placeholder="Folder name"
               className="input-field w-full mb-4"
             />
@@ -432,6 +459,11 @@ export default function FilesView() {
               type="text"
               value={renameName}
               onChange={(e) => setRenameName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && renameName.trim()) {
+                  handleRename()
+                }
+              }}
               placeholder="New name"
               className="input-field w-full mb-4"
             />
@@ -470,6 +502,11 @@ export default function FilesView() {
               <button
                 onClick={handleDelete}
                 className="btn-danger"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleDelete()
+                  }
+                }}
               >
                 Delete
               </button>

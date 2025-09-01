@@ -134,10 +134,8 @@ public class MinioService {
                         .bucket(bucket)
                         .object(path)
                         .build()
-        );
-
-        OutputStream base64Out = Base64.getEncoder().wrap(out)){
-            response.transferTo(base64Out);
+        )){
+            response.transferTo(out);
         } catch (IOException e) {
             throw new IOException("Error while downloading file");
         } catch (InsufficientDataException e) {
