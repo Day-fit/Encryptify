@@ -18,26 +18,22 @@ jobs:
           cd helm/Data
           helm dependency build
 
-      - name: Render CD files
+      - name: Copy charts
         env:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_SU_PASSWORD: ${{ secrets.DB_SU_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
         run: |
-          mkdir -p rendered
-          helm template data helm/Data \
-            --set global.postgresql.auth.username=${DB_USERNAME} \
-            --set global.postgresql.auth.password=${DB_PASSWORD} \
-            --set global.postgresql.auth.postgresPassword=${DB_SU_PASSWORD} \
-            --set global.postgresql.auth.database=${DB_NAME} > rendered/Data.yaml
+          mkdir -p charts
+          cp helm/ charts/
 
-      - name: Upload rendered files to CD repo
+      - name: Upload charts to ArgoCD repo
         env:
           CD_PAT: ${{ secrets.CD_PAT }}
           CD_REPO: ${{ secrets.CD_REPO }}
         run: |
-          cd rendered
+          cd charts
           git init
           git config user.name "CD Pipeline"
           git config user.email "cd_pipeline@dayfit.pl"

@@ -1,0 +1,8 @@
+apiVersion: v2
+name: Infra
+description: Chart containing infra related components (ESO, etc.)
+
+type: application
+
+version: 0.0.1-SNAPSHOT
+appVersion: "0.0.1-SNAPSHOT"

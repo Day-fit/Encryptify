@@ -1,0 +1,4 @@
+replicaCount: 1
+image:
+  repo: ghcr.io/day-fit/encryptify-auth
+  tag: latest

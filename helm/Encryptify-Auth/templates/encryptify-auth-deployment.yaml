@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  labels:
+    service-name: auth
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      service-name: auth
+  template:
+    metadata:
+      labels:
+        service-name: auth
+    spec:
+      containers:
+        - name: encryptify-auth
+          image: "{{ .Values.image.repo}}:{{ .Values.image.tag }}}"
+          ports:
+            - containerPort: 8083
+{{/*          env:*/}}
+{{/*            - name: REDIS_HOST*/}}
+{{/*              valueFrom:*/}}
+{{/*                secretKeyRef:*/}}
+{{/*                  name:*/}}
+{{/*                  key: REDIS_HOST*/}}

@@ -19,3 +19,6 @@ buildNumber.properties
 # Enviroment files
 .env
 env*.yaml
+
+# ESO secret
+ESOSecret.yaml
