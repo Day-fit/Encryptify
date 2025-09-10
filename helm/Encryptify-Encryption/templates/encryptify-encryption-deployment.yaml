@@ -46,7 +46,7 @@ spec:
             - name: RABBITMQ_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.auth.existingSecretName}}
+                  name: {{ .Values.auth.existingSecretName }}
                   key: RABBITMQ_HOST
 
             - name: DB_HOST
