@@ -14,7 +14,7 @@ WORKDIR /app
 # Compile source code
 RUN \
     cd /app/encryptify-email && \
-    ../mvnw package -DskipTests -s /tmp/settings.xml && \
+    ../mvnw package -DskipTests && \
     mv /app/encryptify-email/target/encryptify-email-*.jar /app/encryptify-email.jar
 
 CMD ["java", "-jar", "/app/encryptify-email.jar"]

@@ -12,7 +12,7 @@ spec:
   ingressClassName: nginx
   rules:
     - host: encryptify.dayfit.pl
-    - http:
+      http:
         paths:
           - path: /api/v1/auth/
             backend:
