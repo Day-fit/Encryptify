@@ -45,7 +45,7 @@ jobs:
       - name: Swap ACME server for production
         run: |
           cd charts
-          cat >> Cluster-Infra << EOF
+          cat >> Cluster-Infra/values.yaml << EOF
             host: https://acme-v02.api.letsencrypt.org/directory
           EOF
 
