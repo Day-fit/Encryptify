@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        service: [auth, encrypt, core, email]
+        service: [auth, encryption, core, email]
     steps:
       - name: Login to GHCR
         uses: docker/login-action@v3
