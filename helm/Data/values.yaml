@@ -1,2 +1,19 @@
+postgresql:
+  auth:
+    existingSecret: data-config
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+    database: encryptify_prod
+    username: encryptifyapp
+    enablePostgresUser: true
 redis:
+  auth:
+    existingSecret: data-config
+    existingSecretPasswordKey: redis-password
   usePassword: true
+minio:
+  auth:
+    existingSecret: data-config
+    rootUserSecretKey: minio-username
+    rootPasswordSecretKey: minio-password

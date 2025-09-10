@@ -1,0 +1,4 @@
+apiVersion: v2
+name: Infra
+description: Chart containing infra related cluster-scoped components (ESO, etc.)
+version: 0.0.1-SNAPSHOT

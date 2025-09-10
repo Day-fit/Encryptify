@@ -4,6 +4,9 @@ on:
     types:
       - released
 
+permissions:
+  contents: read
+
 jobs:
   update-cd:
     runs-on: ubuntu-22.04
@@ -19,14 +22,32 @@ jobs:
           helm dependency build
 
       - name: Copy charts
-        env:
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_SU_PASSWORD: ${{ secrets.DB_SU_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
         run: |
           mkdir -p charts
           cp helm/ charts/
+
+      - name: Add version in Values.yaml for Encryptify Apps
+        run: |
+          cd charts
+          cat >> Encryptify-Auth/values.yaml << EOF
+            tag: ${{ github.event.release.tag_name }}
+          EOF
+          cat >> Encryptify-Core/values.yaml << EOF
+            tag: ${{ github.event.release.tag_name }}
+          EOF
+          cat >> Encryptify-Email/values.yaml << EOF
+            tag: ${{ github.event.release.tag_name }}
+          EOF
+          cat >> Encryptify-Encryption/values.yaml << EOF
+            tag: ${{ github.event.release.tag_name }}
+          EOF
+
+      - name: Swap ACME server for production
+        run: |
+          cd charts
+          cat >> Cluster-Infra << EOF
+            host: https://acme-v02.api.letsencrypt.org/directory
+          EOF
 
       - name: Upload charts to ArgoCD repo
         env:
@@ -39,6 +60,6 @@ jobs:
           git config user.email "cd_pipeline@dayfit.pl"
           git remote add origin https://x-access-token:${CD_PAT}@github.com/${CD_REPO}.git
           git add .
-          git commit -m "Upload new CD configuration"
+          git commit -m "Sync with Encryptify repository ${{ github.event.release.tag_name }}"
           git branch -M main
           git push -f origin main

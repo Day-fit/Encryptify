@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/account")
+@RequestMapping("/api/v1/auth/account")
 public class EncryptifyUserController {
     private final EncryptifyUserCacheService userCacheService;
 

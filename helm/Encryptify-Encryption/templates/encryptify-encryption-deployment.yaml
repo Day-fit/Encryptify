@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: encryption-deployment
   labels:
-    service-name: auth
+    service-name: encryption
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      service-name: auth
+      service-name: encryption
   template:
     metadata:
-      name: encryptify-auth
+      name: encryptify-encryption
       labels:
-        service-name: auth
+        service-name: encryption
     spec:
       containers:
-        - name: encryptify-auth
+        - name: encryptify-encryption
           image: "{{ .Values.image.repo}}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8083
+            - containerPort: 8081
           env:
             - name: REDIS_HOST
               valueFrom:
@@ -69,9 +69,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.auth.existingSecretName }}
                   key: DB_NAME
-                  
-            - name: ALLOWED_ORIGINS_PATTERNS
+
+            - name: JWKS_URI
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.auth.existingSecretName }}
-                  key: ALLOWED_ORIGINS_PATTERNS
+                  name: {{.Values.auth.existingSecretName }}
+                  key: JWKS_URI

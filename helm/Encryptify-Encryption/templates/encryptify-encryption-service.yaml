@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: encryption-service
+spec:
+  selector:
+    service-name: encryption
+  ports:
+    - port: 8081
+      protocol: TCP
+      targetPort: 8081

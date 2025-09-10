@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: core-deployment
   labels:
-    service-name: auth
+    service-name: core
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      service-name: auth
+      service-name: core
   template:
     metadata:
-      name: encryptify-auth
+      name: encryptify-core
       labels:
-        service-name: auth
+        service-name: core
     spec:
       containers:
-        - name: encryptify-auth
+        - name: encryptify-core
           image: "{{ .Values.image.repo}}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8083
+            - containerPort: 8080
           env:
             - name: REDIS_HOST
               valueFrom:
@@ -69,7 +69,29 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.auth.existingSecretName }}
                   key: DB_NAME
-                  
+
+            - name: JWKS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.auth.existingSecretName }}
+                  key: JWKS_URI
+
+            - name: MINIO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: MINIO_USERNAME
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: MINIO_PASSWORD
+            - name: MINIO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: MINIO_URL
+
             - name: ALLOWED_ORIGINS_PATTERNS
               valueFrom:
                 secretKeyRef:
