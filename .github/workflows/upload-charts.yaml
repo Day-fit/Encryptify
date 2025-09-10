@@ -24,7 +24,7 @@ jobs:
       - name: Copy charts
         run: |
           mkdir -p charts
-          cp helm/ charts/
+          cp -r helm/ charts/
 
       - name: Add version in Values.yaml for Encryptify Apps
         run: |
