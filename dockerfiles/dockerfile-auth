@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
 
 LABEL name="encryptify-auth"
@@ -10,11 +11,25 @@ COPY ./mvnw /app/mvnw
 COPY ./encryptify-auth /app/encryptify-auth
 WORKDIR /app
 
+# Setup maven settings
+RUN --mount=type=secret,id=gh_name \
+    --mount=type=secret,id=github_token \
+    sh -c 'echo \
+"<settings>" \
+"  <servers>" \
+"    <server>" \
+"      <id>github</id>" \
+"      <username>$(cat /run/secrets/gh_name)</username>" \
+"      <password>$(cat /run/secrets/github_token)</password>" \
+"    </server>" \
+"  </servers>" \
+"</settings>" > /tmp/settings.xml'
+
 # Compile source code
 RUN \
     cd /app/encryptify-auth && \
-    ../mvnw package -DskipTests && \
-    mv /app/encryptify-core/target/encryptify-auth-*.jar /app/encryptify-auth.jar
+    ../mvnw package -DskipTests -s /tmp/settings.xml && \
+    mv /app/encryptify-auth/target/encryptify-auth-*.jar /app/encryptify-auth.jar
 
 CMD ["java", "-jar", "/app/encryptify-auth.jar"]
 

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
 
 LABEL name="encryptify-email"
@@ -14,7 +15,7 @@ WORKDIR /app
 RUN \
     cd /app/encryptify-email && \
     ../mvnw package -DskipTests && \
-    mv /app/encryptify-core/target/encryptify-email-*.jar /app/encryptify-email.jar
+    mv /app/encryptify-email/target/encryptify-email-*.jar /app/encryptify-email.jar
 
 CMD ["java", "-jar", "/app/encryptify-email.jar"]
 

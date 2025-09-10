@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: encryptify-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: tls-cluster-issuer
+spec:
+  tls:
+    - hosts:
+        - encryptify.dayfit.pl
+      secretName: tls-cluster-issuer
+  ingressClassName: nginx
+  rules:
+    - host: encryptify.dayfit.pl
+      http:
+        paths:
+          - path: /api/v1/auth/
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8083
+            pathType: Prefix
+
+          - path: /api/v1/email/
+            backend:
+              service:
+                name: email-service
+                port:
+                  number: 8082
+            pathType: Prefix
+
+          - path: /api/v1/
+            backend:
+              service:
+                name: core-service
+                port:
+                  number: 8080
+            pathType: Prefix
