@@ -32,7 +32,7 @@ class AuthService {
 
   async info(): Promise<InfoResponse> {
     try{
-      const response = await this.api.get<InfoResponse>('/account/info', {})
+      const response = await this.api.get<InfoResponse>('/auth/account/info', {})
       return response.data
     } catch (error: any) {
       if (axios.isAxiosError(error)) {

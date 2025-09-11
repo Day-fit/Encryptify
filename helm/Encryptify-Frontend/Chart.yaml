@@ -1,0 +1,6 @@
+apiVersion: v2
+name: Encryptify-Frontend
+description: This is the chart of the Encryptify-Frontend
+version: 0.0.1-SNAPSHOT
+appVersion: "0.0.1-SNAPSHOT"
+type: application
