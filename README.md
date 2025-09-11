@@ -40,6 +40,7 @@
   - `auth-lib/`
   - `email/`
   - `encryption/` (working on it!)
+  - `frontend/`
 - **CI/CD:**
   - Build & test with GitHub Actions
   - Deploy with ArgoCD (Helm charts live in repo dedicated to manifests)
