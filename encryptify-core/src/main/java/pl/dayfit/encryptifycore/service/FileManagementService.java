@@ -132,7 +132,7 @@ public class FileManagementService {
                     .renameFile(path, newName, bucketName);
         } catch (IOException exception) {
             log.warn("Failed to rename file {}, reason: {}", path, exception.getMessage());
-            throw new FileActionException("Failed to download file");
+            throw new FileActionException("Failed to rename file");
         } catch (InsufficientDataException ex) {
             log.warn("Failed to rename file, insufficient data for file {}", path);
             throw new FileActionException("Insufficient data for file");
