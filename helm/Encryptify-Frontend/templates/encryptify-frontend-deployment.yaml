@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: encryptify-frontend-deployment
+  labels:
+    service-name: frontend
+spec:
+  replicas: {{ .Values.replicaCount }}
+
+  selector:
+    matchLabels:
+      service-name: frontend
+
+  template:
+    metadata:
+      name: encryptify-frontend
+      labels:
+        service-name: frontend
+    spec:
+      containers:
+        - name: encryptify-frontend
+          image: {{ .Values.image.repo }}:{{ .Values.image.tag }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80

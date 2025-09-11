@@ -28,6 +28,22 @@ public class JwtClaimsService {
     @Setter
     private Supplier<JWKSet> jwkSetSupplier;
 
+    public String getBucketName(String token)
+    {
+        return extractClaim(token, claims -> {
+            try {
+                if (!JwtTokenType.ACCESS_TOKEN.equals(getTokenType(token)))
+                {
+                    throw new IllegalArgumentException("Invalid token type");
+                }
+
+                return claims.getStringClaim("bucketName");
+            } catch (ParseException e) {
+                throw new BadCredentialsException("Invalid token");
+            }
+        });
+    }
+
     public Collection<? extends GrantedAuthority> getRoles(String token)
     {
         return extractClaim(token, claims ->

@@ -1,0 +1,11 @@
+# API Configuration - Updated to match actual microservice ports
+NEXT_PUBLIC_AUTH_URL=http://localhost:8083/api/v1/
+NEXT_PUBLIC_CORE_URL=http://localhost:8081/api/v1
+NEXT_PUBLIC_ENCRYPTION_URL=http://localhost:8081/api/v1
+NEXT_PUBLIC_EMAIL_URL=http://localhost:8082/api/v1
+
+# Development
+NODE_ENV=development
+
+# Optional: Custom port for frontend
+# PORT=3000 

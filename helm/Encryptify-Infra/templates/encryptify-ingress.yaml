@@ -37,3 +37,11 @@ spec:
                 port:
                   number: 8080
             pathType: Prefix
+
+          - path: /
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80
+            pathType: Prefix

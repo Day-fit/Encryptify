@@ -4,5 +4,5 @@ import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.entity.DriveFile;
 
 public interface FileUploadDtoMapper {
-    DriveFile toDestination(FileRequestDto fileRequestDto, String uploader);
+    DriveFile toDestination(FileRequestDto fileRequestDto, long fileSize, String uploader);
 }

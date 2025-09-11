@@ -24,7 +24,6 @@ import java.util.List;
 @EnableConfigurationProperties({SecurityConfigurationProperties.class})
 public class SecurityConfiguration {
     private final SecurityConfigurationProperties securityConfigurationProperties;
-    private final CorsConfigurationSource corsConfigurationSource;
     private final EncryptifyAuthenticationEntrypoint authenticationEntrypoint;
     private final CookieFilter cookieFilter;
 
@@ -37,7 +36,7 @@ public class SecurityConfiguration {
         List<String> finalSecuredEndpoints = securedEndpoints;
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(request ->
                         request
                                 .requestMatchers(finalSecuredEndpoints.toArray(new String[0])).authenticated()

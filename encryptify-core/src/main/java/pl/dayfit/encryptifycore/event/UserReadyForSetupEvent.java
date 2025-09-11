@@ -1,4 +1,4 @@
 package pl.dayfit.encryptifycore.event;
 
-public record UserReadyForSetupEvent(String username) {
+public record UserReadyForSetupEvent(String bucketName) {
 }

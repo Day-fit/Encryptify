@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pl.dayfit.encryptifyauthlib.principal.UserPrincipal;
 import pl.dayfit.encryptifycore.dto.FileDeleteDto;
+import pl.dayfit.encryptifycore.dto.FileRenameDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.exception.FileActionException;
 import pl.dayfit.encryptifycore.service.FileManagementService;
@@ -22,9 +24,14 @@ public class FileManagementController {
     private final FileManagementService fileManagementService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Map<String, Long>> handleUploadingFile(@RequestBody FileRequestDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
-    {
-        long id = fileManagementService.handleFileUpload(dto, userPrincipal.getName());
+    public ResponseEntity<Map<String, Long>> handleUploadingFile(@RequestPart FileRequestDto metadata, @RequestPart MultipartFile file, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        long id = fileManagementService.handleFileUpload(
+                metadata,
+                file,
+                userPrincipal.getName(),
+                userPrincipal.getBucketName()
+        );
+
         return ResponseEntity
                 .ok(Map.of("id", id));
     }
@@ -35,7 +42,7 @@ public class FileManagementController {
         response.setContentType("application/octet-stream");
 
         try (OutputStream out = response.getOutputStream()) {
-            fileManagementService.handleFileDownload(fileId, userPrincipal.getName(), out);
+            fileManagementService.handleFileDownload(fileId, userPrincipal.getName(), userPrincipal.getBucketName(), out);
         } catch (IOException ex) {
             throw new FileActionException("Failed to download a file. Try again later");
         }
@@ -44,8 +51,16 @@ public class FileManagementController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> handleDeletingFile(@RequestBody FileDeleteDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
-        fileManagementService.handleFileDeletion(dto.id(), userPrincipal.getName());
+        fileManagementService.handleFileDeletion(dto.id(), userPrincipal.getName(), userPrincipal.getBucketName());
         return ResponseEntity
                 .ok(Map.of("message", "Successfully deleted file"));
+    }
+
+    @PatchMapping("/rename")
+    public ResponseEntity<Map<String, String>> handleFileRenaming(@RequestBody FileRenameDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        fileManagementService.handleFileRenaming(dto, userPrincipal.getName(), userPrincipal.getBucketName());
+
+        return ResponseEntity
+                .ok(Map.of("message", "Successfully renamed file"));
     }
 }

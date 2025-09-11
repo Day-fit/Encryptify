@@ -18,11 +18,13 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String accessToken = (String) authentication.getCredentials();
+        String subject = jwtClaimsService.getSubject(accessToken); //If token is invalid, exception will be thrown
 
         return new JwtAuthenticationToken(
                 jwtClaimsService.getRoles(accessToken),
                 new UserPrincipal(
-                        jwtClaimsService.getSubject(accessToken)
+                        subject,
+                        jwtClaimsService.getBucketName(accessToken)
                 )
         );
     }

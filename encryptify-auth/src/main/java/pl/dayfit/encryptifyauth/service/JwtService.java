@@ -41,6 +41,7 @@ public class JwtService {
                     .jwtID(UUID.randomUUID().toString())
                     .claim("roles", user.getRoles())
                     .claim("tokenType", tokenType.toString())
+                    .claim("bucketName", user.getBucketName())
                     .build();
 
             JWSSigner jwsSigner = new Ed25519Signer(jwtSecretRotationService.getCurrentOctetKeyPair());

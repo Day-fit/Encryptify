@@ -1,0 +1,3 @@
+FROM nginx:1.29.1-perl
+LABEL authors="Dayfit"
+COPY ./encryptify-frontend/out /usr/share/nginx/html

@@ -38,7 +38,8 @@ public class EncryptifyUserDetailsService implements org.springframework.securit
                         .stream()
                         .map(SimpleGrantedAuthority::new)
                         .toList(),
-                user.getId()
+                user.getId(),
+                user.getBucketName()
         );
     }
 
