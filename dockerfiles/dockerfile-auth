@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
 
-LABEL name="encryptify-encryption"
+LABEL name="encryptify-auth"
 LABEL maintainer="Dayfit"
-LABEL description="Encryptify Encryption Service"
+LABEL description="Encryptify Auth Service"
 
 COPY ./.mvn /app/.mvn
 COPY ./mvnw /app/mvnw
 
-COPY ./encryptify-encryption /app/encryptify-encryption
+COPY ./encryptify-auth /app/encryptify-auth
 WORKDIR /app
 
 # Setup maven settings
@@ -27,10 +27,10 @@ RUN --mount=type=secret,id=gh_name \
 
 # Compile source code
 RUN \
-    cd /app/encryptify-encryption && \
+    cd /app/encryptify-auth && \
     ../mvnw package -DskipTests -s /tmp/settings.xml && \
-    mv /app/encryptify-encryption/target/encryptify-encryption-*.jar /app/encryption.jar
+    mv /app/encryptify-auth/target/encryptify-auth-*.jar /app/encryptify-auth.jar
 
-CMD ["java", "-jar", "/app/encryption.jar"]
+CMD ["java", "-jar", "/app/encryptify-auth.jar"]
 
-EXPOSE 8081
+EXPOSE 8083

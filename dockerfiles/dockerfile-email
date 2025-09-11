@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
+
+LABEL name="encryptify-email"
+LABEL maintainer="Dayfit"
+LABEL description="Encryptify Email Service"
+
+COPY ./.mvn /app/.mvn
+COPY ./mvnw /app/mvnw
+
+COPY ./encryptify-email /app/encryptify-email
+WORKDIR /app
+
+# Compile source code
+RUN \
+    cd /app/encryptify-email && \
+    ../mvnw package -DskipTests && \
+    mv /app/encryptify-email/target/encryptify-email-*.jar /app/encryptify-email.jar
+
+CMD ["java", "-jar", "/app/encryptify-email.jar"]
+
+EXPOSE 8082

@@ -19,6 +19,8 @@
         <repository>
             <id>github</id>
             <url>https://maven.pkg.github.com/day-fit/encryptify</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
     </repositories>
 

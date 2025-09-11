@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-deployment
+  labels:
+    service-name: email
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      service-name: email
+  template:
+    metadata:
+      name: encryptify-email
+      labels:
+        service-name: email
+    spec:
+      containers:
+        - name: encryptify-email
+          image: "{{ .Values.image.repo}}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: REDIS_PASSWORD
+
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: RABBITMQ_PASSWORD
+            - name: RABBITMQ_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: RABBITMQ_HOST
+
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: MAIL_USERNAME
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: MAIL_PASSWORD
+            - name: MAIL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: MAIL_HOST
+            - name: MAIL_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: MAIL_PORT
+            - name: MAIL_FROM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: MAIL_FROM
+
+            - name: ENCRYPTIFY_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName}}
+                  key: ENCRYPTIFY_DOMAIN

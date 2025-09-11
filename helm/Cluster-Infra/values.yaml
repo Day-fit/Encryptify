@@ -1,0 +1,12 @@
+oci:
+  tenancy: "ocid1.tenancy.oc1..aaaaaaaaj23n23mwq4vhhxovy6owdsvwir7tdyk5un3ey3hoqkckp7petrxq"
+  user: "ocid1.user.oc1..aaaaaaaaxzaervtwikjt3zd375rxa74tu3rseyxjrxz32ghxnxx7sjzwxnca"
+  vault: "ocid1.vault.oc1.eu-frankfurt-1.enulk7c6aafeu.abtheljtgyu7m722zopixx3nphqd5tzxh2hinsiv47o6ym2eey4blgjz3maa"
+  region: "eu-frankfurt-1"
+
+config:
+  name: eso-secret
+  namespace: infra
+
+acme:
+  host: https://acme-staging-v02.api.letsencrypt.org/directory

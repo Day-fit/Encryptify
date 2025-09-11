@@ -19,3 +19,10 @@ buildNumber.properties
 # Enviroment files
 .env
 env*.yaml
+
+# Docker build secrets
+github_token.txt
+gh_name.txt
+
+# ESO secret
+ESOSecret.yaml

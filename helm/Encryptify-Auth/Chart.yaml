@@ -1,0 +1,6 @@
+apiVersion: v2
+name: Encryptify-Auth
+description: This is the chart of the Encryptify-Auth microservice
+version: 0.0.1-SNAPSHOT
+appVersion: "0.0.1-SNAPSHOT"
+type: application

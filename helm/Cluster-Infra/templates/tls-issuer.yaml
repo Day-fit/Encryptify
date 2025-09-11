@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: tls-cluster-issuer
+spec:
+  acme:
+    server: {{ .Values.acme.host }}
+    email: xdayfit@gmail.com
+    privateKeySecretRef:
+      name: tls-cluster-issuer
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
