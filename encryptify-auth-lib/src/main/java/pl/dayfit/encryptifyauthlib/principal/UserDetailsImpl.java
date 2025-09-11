@@ -17,6 +17,8 @@ public class UserDetailsImpl implements UserDetails {
 
     @Getter
     private final long userId;
+    @Getter
+    private final String bucketName;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

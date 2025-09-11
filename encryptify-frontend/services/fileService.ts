@@ -83,19 +83,29 @@ class FileService {
     }
   }
 
-  async uploadFile(file: File, folderId?: number, publicKey?: string): Promise<UploadResponse> {
+  async uploadFile(file: File, folderId?: number, publicKey?: string, onUploadProgress?: (progress: number) => void): Promise<UploadResponse> {
     try {
-      // Convert file to base64
-      const base64Content = await this.fileToBase64(file)
+      const formData = new FormData()
+      formData.append('file', file)
       
-      const fileDto: FileRequestDto = {
+      const metadata = {
         name: file.name,
-        base64Content,
         folderId: folderId || null,
         publicKey: publicKey || ''
       }
+      formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
 
-      const response = await this.api.post<UploadResponse>('/file/upload', fileDto)
+      const response = await this.api.post<UploadResponse>('/file/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (onUploadProgress) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
+            onUploadProgress(percentCompleted)
+          }
+        },
+      })
       return response.data
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
@@ -230,18 +240,29 @@ class FileService {
     }
   }
 
-  private async fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => {
-        const result = reader.result as string
-        // Remove data:application/pdf;base64, prefix
-        const base64 = result.split(',')[1]
-        resolve(base64)
+  async renameFile(fileId: number, newName: string): Promise<void> {
+    try {
+      const renameDto: FolderRenameDto = { id: fileId, newName }
+      await this.api.patch('/file/rename', renameDto)
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 400) {
+          const errorMessage = error.response.data?.message || 'Invalid file name'
+          throw new Error(errorMessage)
+        } else if (error.response?.status === 401) {
+          throw new Error('Authentication required. Please log in again')
+        } else if (error.response?.status === 403) {
+          throw new Error('Access denied to rename this file')
+        } else if (error.response?.status === 404) {
+          throw new Error('File not found')
+        } else if (error.response?.status === 409) {
+          throw new Error('File with this name already exists')
+        } else if (error.response?.status === 500) {
+          throw new Error('Server error during file rename. Please try again')
+        }
       }
-      reader.onerror = error => reject(error)
-    })
+      throw new Error('File rename failed')
+    }
   }
 }
 

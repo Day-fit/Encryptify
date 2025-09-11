@@ -24,6 +24,7 @@ import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -48,7 +49,9 @@ public class EncryptifyUserService {
      */
     public String handleLogin(LoginRequestDTO dto)
     {
-        UserDetailsToken token = (UserDetailsToken) authenticationProvider.authenticate(new UserDetailsTokenCandidate(dto.identifier(), dto.password()));
+        UserDetailsToken token = (UserDetailsToken) authenticationProvider.authenticate(
+                new UserDetailsTokenCandidate(dto.identifier(), dto.password())
+        );
         return token.getName();
     }
 
@@ -62,6 +65,7 @@ public class EncryptifyUserService {
     {
         String email = dto.email();
         String username = dto.username();
+        String bucketName = UUID.randomUUID().toString();
 
         if(userRepository.existsByEmailHashLookup(email) || userRepository.existsByUsername(username))
         {
@@ -79,19 +83,20 @@ public class EncryptifyUserService {
                         false,
                         false, //we are waiting for user to verify their email
                         List.of("USER"),
-                        null
+                        null,
+                        bucketName
                 )
         );
 
         if (environment.matchesProfiles("no-email"))
         {
             applicationEventPublisher
-                    .publishEvent(new UserReadyForSetupEvent(username));
+                    .publishEvent(new UserReadyForSetupEvent(bucketName));
             return;
         }
 
         emailCommunicationService
-                .handleVerificationSending(username, email);
+                .handleVerificationSending(username, email, bucketName);
     }
 
     /**

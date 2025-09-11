@@ -43,7 +43,7 @@ public class EmailCommunicationService {
      * @param username name of the user
      * @param email email address of the user
      */
-    public void handleVerificationSending(final String username, final String email)
+    public void handleVerificationSending(final String username, final String email, final String bucketName)
     {
         rabbitTemplate.convertAndSend
                 (
@@ -58,7 +58,7 @@ public class EmailCommunicationService {
                 );
 
         applicationEventPublisher
-                .publishEvent(new UserReadyForSetupEvent(username));
+                .publishEvent(new UserReadyForSetupEvent(bucketName));
     }
 
     /**

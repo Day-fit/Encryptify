@@ -1,5 +1,6 @@
 package pl.dayfit.encryptifycore.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class DriveFile {
     @Column(nullable = false)
     private String fileSize;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     private DriveFolder parent;
 

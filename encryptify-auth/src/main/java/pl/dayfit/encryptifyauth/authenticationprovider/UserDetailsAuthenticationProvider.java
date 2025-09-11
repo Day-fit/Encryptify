@@ -27,7 +27,7 @@ public class UserDetailsAuthenticationProvider implements AuthenticationProvider
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         UserDetailsImpl user = (UserDetailsImpl) encryptifyUserDetailsService.loadUserByUsername(authentication.getName());
-        Principal principal = new UserPrincipal(user.getUsername());
+        Principal principal = new UserPrincipal(user.getUsername(), user.getBucketName());
 
         if(!passwordEncoder.matches((String) authentication.getCredentials(), user.getPassword()))
         {

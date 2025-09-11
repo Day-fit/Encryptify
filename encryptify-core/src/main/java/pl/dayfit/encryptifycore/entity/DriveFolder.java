@@ -1,5 +1,7 @@
 package pl.dayfit.encryptifycore.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,8 +20,10 @@ public class DriveFolder {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference
     private DriveFolder parent;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<DriveFolder> children = new ArrayList<>();
 
@@ -35,6 +39,7 @@ public class DriveFolder {
     @Column(nullable = false)
     private Instant creationDate;
 
+    @JsonManagedReference
     @OneToMany(fetch =  FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "parent")
     private List<DriveFile> files = new ArrayList<>();
 

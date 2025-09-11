@@ -35,6 +35,11 @@ export default function FilesView() {
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set())
   const [showContextMenu, setShowContextMenu] = useState<{ x: number; y: number; itemId: number } | null>(null)
   
+  // State to hold the item that the context menu is currently acting upon
+  const [itemInContext, setItemInContext] = useState<FileSystemItem | null>(null)
+  // State to track the ID of the file currently being downloaded
+  const [downloadingFileId, setDownloadingFileId] = useState<number | null>(null)
+  
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
@@ -46,6 +51,7 @@ export default function FilesView() {
   const [renameName, setRenameName] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadFolderId, setUploadFolderId] = useState<number | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0) // New state for upload progress
   
   const { isInitialized, encryptFile, decryptFile, generateFileKey, storeFileKeyMapping, getFileKeyId } = useEncryption()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -83,7 +89,7 @@ export default function FilesView() {
       const encryptedFile = await encryptFile(uploadFile, keyId)
       
       // Upload encrypted file
-      const uploadResponse = await fileService.uploadFile(encryptedFile, (uploadFolderId || currentFolderId) || undefined, keyId)
+      const uploadResponse = await fileService.uploadFile(encryptedFile, (uploadFolderId || currentFolderId) || undefined, keyId, setUploadProgress)
       
       // Store the key mapping for this file
       await storeFileKeyMapping(uploadResponse.id, keyId)
@@ -94,6 +100,8 @@ export default function FilesView() {
       loadItems()
     } catch (error: any) {
       toast.error(error.message)
+    } finally {
+      setUploadProgress(0) // Reset progress after upload attempt
     }
   }
 
@@ -115,13 +123,15 @@ export default function FilesView() {
     if (!renameName.trim()) return
 
     try {
-      const item = items.find(i => i.id === showContextMenu?.itemId)
-      if (!item) return
-
-      if (item.type === 'FOLDER') {
-        await fileService.renameFolder(item.id, renameName.trim())
+      if (!itemInContext) {
+        return
       }
-      // Note: File renaming would need backend support
+      
+      if (itemInContext.type === 'FOLDER') {
+        await fileService.renameFolder(itemInContext.id, renameName.trim())
+      } else if (itemInContext.type === 'FILE') {
+        await fileService.renameFile(itemInContext.id, renameName.trim())
+      }
       
       toast.success('Renamed successfully!')
       setShowRenameModal(false)
@@ -134,16 +144,17 @@ export default function FilesView() {
   }
 
   const handleDelete = async () => {
-    if (!showContextMenu?.itemId) return
+    if (!itemInContext) return
 
     try {
-      const item = items.find(i => i.id === showContextMenu.itemId)
-      if (!item) return
-
-      if (item.type === 'FILE') {
-        await fileService.deleteFile(item.id)
+      if (!itemInContext) {
+        return
+      }
+      
+      if (itemInContext.type === 'FILE') {
+        await fileService.deleteFile(itemInContext.id)
       } else {
-        await fileService.deleteFolder(item.id)
+        await fileService.deleteFolder(itemInContext.id)
       }
       
       toast.success('Deleted successfully!')
@@ -160,6 +171,7 @@ export default function FilesView() {
       toast.error('Encryption service not initialized. Please wait or refresh.')
       return
     }
+    setDownloadingFileId(fileId)
     try {
       const blob = await fileService.downloadFile(fileId)
       
@@ -186,6 +198,8 @@ export default function FilesView() {
       toast.success('File downloaded successfully!')
     } catch (error: any) {
       toast.error(error.message)
+    } finally {
+      setDownloadingFileId(null)
     }
   }
 
@@ -195,17 +209,18 @@ export default function FilesView() {
     }
   }
 
-  const handleContextMenu = (e: React.MouseEvent, itemId: number) => {
+  const handleContextMenu = (e: React.MouseEvent, item: FileSystemItem) => {
     e.preventDefault()
-    setShowContextMenu({ x: e.clientX, y: e.clientY, itemId })
+    setItemInContext(item)
+    setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
   }
 
   const renderListItem = (item: FileSystemItem) => (
     <div
-      key={item.id}
+      key={`${item.type}-${item.id}`}
       className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer"
       onClick={() => handleItemClick(item)}
-      onContextMenu={(e) => handleContextMenu(e, item.id)}
+      onContextMenu={(e) => handleContextMenu(e, item)}
     >
       <div className="flex items-center space-x-3">
         {item.type === 'FOLDER' ? (
@@ -233,13 +248,18 @@ export default function FilesView() {
                 handleDownload(item.id, item.name)
               }}
               className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+              disabled={downloadingFileId === item.id}
             >
-              <Download className="h-4 w-4" />
+              {downloadingFileId === item.id ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+                handleContextMenu(e, item)
               }}
               className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
             >
@@ -251,7 +271,7 @@ export default function FilesView() {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+              handleContextMenu(e, item)
             }}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
           >
@@ -264,10 +284,10 @@ export default function FilesView() {
 
   const renderGridItem = (item: FileSystemItem) => (
     <div
-      key={item.id}
+      key={`${item.type}-${item.id}`}
       className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm cursor-pointer bg-white"
       onClick={() => handleItemClick(item)}
-      onContextMenu={(e) => handleContextMenu(e, item.id)}
+      onContextMenu={(e) => handleContextMenu(e, item)}
     >
       <div className="text-center">
         {item.type === 'FOLDER' ? (
@@ -290,13 +310,18 @@ export default function FilesView() {
             }}
             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
             title="Download"
+            disabled={downloadingFileId === item.id}
           >
-            <Download className="h-4 w-4" />
+            {downloadingFileId === item.id ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
-              setShowContextMenu({ x: e.clientX, y: e.clientY, itemId: item.id })
+              handleContextMenu(e, item)
             }}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg"
             title="More options"
@@ -395,6 +420,14 @@ export default function FilesView() {
               onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               className="w-full mb-4"
             />
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            )}
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowUploadModal(false)}
@@ -404,7 +437,7 @@ export default function FilesView() {
               </button>
               <button
                 onClick={handleFileUpload}
-                disabled={!uploadFile || !isInitialized}
+                disabled={!uploadFile || !isInitialized || (uploadProgress > 0 && uploadProgress < 100)}
                 className="btn-primary disabled:opacity-50"
               >
                 Upload
@@ -469,7 +502,10 @@ export default function FilesView() {
             />
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => setShowRenameModal(false)}
+                onClick={() => {
+                  setShowRenameModal(false)
+                  setItemInContext(null)
+                }}
                 className="btn-secondary"
               >
                 Cancel
@@ -489,12 +525,15 @@ export default function FilesView() {
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
-            <p className="text-gray-600 mb-4">Are you sure you want to delete this item? This action cannot be undone.</p>
+            <p className="text-gray-600 mb-4 text-wrap">Are you sure you want to delete this item? This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setItemInContext(null)
+                }}
                 className="btn-secondary"
               >
                 Cancel
@@ -523,9 +562,11 @@ export default function FilesView() {
         >
           <button
             onClick={() => {
-              setRenameName(items.find(i => i.id === showContextMenu.itemId)?.name || '')
-              setShowRenameModal(true)
-              setShowContextMenu(null)
+              if (itemInContext) {
+                setRenameName(itemInContext.name)
+                setShowRenameModal(true)
+                setShowContextMenu(null)
+              }
             }}
             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
           >
@@ -534,8 +575,10 @@ export default function FilesView() {
           </button>
           <button
             onClick={() => {
-              setShowDeleteModal(true)
-              setShowContextMenu(null)
+              if (itemInContext) {
+                setShowDeleteModal(true)
+                setShowContextMenu(null)
+              }
             }}
             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
           >
@@ -549,7 +592,9 @@ export default function FilesView() {
       {showContextMenu && (
         <div
           className="fixed inset-0 z-40"
-          onClick={() => setShowContextMenu(null)}
+          onClick={() => {
+            setShowContextMenu(null)
+          }}
         />
       )}
     </div>

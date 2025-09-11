@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.entity.DriveFolder;
 import pl.dayfit.encryptifycore.event.UserReadyForSetupEvent;
 import pl.dayfit.encryptifycore.exception.FileActionException;
@@ -27,11 +26,11 @@ public class MinioService {
     @RabbitListener(queues = "minio.configurer")
     public void setupBucket(UserReadyForSetupEvent event) throws Exception
     {
-        String username = event.username();
+        String bucketName = event.bucketName();
 
         boolean alreadyExist = minioClient.bucketExists(
                 BucketExistsArgs.builder()
-                        .bucket(username)
+                        .bucket(bucketName)
                         .build()
         );
 
@@ -39,7 +38,7 @@ public class MinioService {
         {
             minioClient.makeBucket(
                     MakeBucketArgs.builder()
-                            .bucket(username)
+                            .bucket(bucketName)
                             .build()
             );
 
@@ -48,7 +47,7 @@ public class MinioService {
 
         Iterable<Result<Item>> results =  minioClient.listObjects(
                 ListObjectsArgs.builder()
-                        .bucket(username)
+                        .bucket(bucketName)
                         .recursive(true)
                         .build()
         );
@@ -63,20 +62,20 @@ public class MinioService {
 
         minioClient.removeObjects(
                 RemoveObjectsArgs.builder()
-                        .bucket(username)
+                        .bucket(bucketName)
                         .objects(toDelete)
                         .build()
         );
     }
 
-    public void addFile(String base64Content, DriveFile driveFile) throws IOException, InsufficientDataException {
-        try(InputStream stream = new ByteArrayInputStream(Base64.getDecoder().decode(base64Content)))
+    public void addFile(InputStream in, String path, String bucket) throws IOException, InsufficientDataException {
+        try
         {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(driveFile.getUploader())
-                            .object(driveFile.getPath())
-                            .stream(stream, stream.available(), -1)
+                            .bucket(bucket)
+                            .object(path)
+                            .stream(in, in.available(), -1)
                     .build()
             );
         } catch (IOException e) {
@@ -214,5 +213,35 @@ public class MinioService {
         }
 
         return result;
+    }
+
+    public void renameFile(String path, String newName, String bucketName) throws IOException, InsufficientDataException {
+        try {
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(newName)
+                            .source(
+                                    CopySource.builder()
+                                            .bucket(bucketName)
+                                            .object(path)
+                                            .build()
+                            )
+                            .build()
+            );
+
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()
+            );
+        } catch (IOException e) {
+            throw new IOException("Error while renaming file");
+        } catch (InsufficientDataException e) {
+            throw new InsufficientDataException("Insufficient data for file rename");
+        } catch (Exception e) {
+            throw new IllegalStateException("Internal error while renaming file", e);
+        }
     }
 }

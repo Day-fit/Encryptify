@@ -39,4 +39,7 @@ public class EncryptifyUser {
     private List<String> roles;
 
     private Instant emailVerificationDate;
+
+    @Column(nullable = false, unique = true)
+    private String bucketName;
 }

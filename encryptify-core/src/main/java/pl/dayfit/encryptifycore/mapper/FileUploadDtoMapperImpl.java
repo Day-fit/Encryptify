@@ -8,7 +8,6 @@ import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.entity.DriveFolder;
 
 import java.time.Instant;
-import java.util.Base64;
 import java.util.UUID;
 
 @Component
@@ -17,7 +16,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     private final DriveFolderCacheService driveFolderCacheService;
 
     @Override
-    public DriveFile toDestination(FileRequestDto fileRequestDto, String uploader) {
+    public DriveFile toDestination(FileRequestDto fileRequestDto, long fileSize, String uploader) {
         DriveFolder driveFolder = null;
 
         if (fileRequestDto.folderId() != null)
@@ -27,8 +26,6 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
 
         final String name = fileRequestDto.name();
         DriveFile driveFile = new DriveFile();
-
-        byte[] bytes = Base64.getDecoder().decode(fileRequestDto.base64Content()); //Decoding to save 33% of space
 
         String path = "";
 
@@ -44,7 +41,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setUploadDate(Instant.now());
         driveFile.setPath(path + name);
         driveFile.setFileSize(
-                formatBytes(bytes.length)
+                formatBytes(fileSize)
         );
 
         return driveFile;
