@@ -117,7 +117,10 @@ public class FileManagementService {
 
         String path = driveFile.getPath();
         String newName = dto.newName();
-        String newPath = path.split("/")[path.split("/").length - 1].replace(driveFile.getName(), newName);
+        String[] fragments = path.split("/");
+        fragments[fragments.length - 1] = newName;
+
+        String newPath = String.join("/", fragments);
 
         if (!accessHelper.isOwner(driveFile, username))
         {
