@@ -7,7 +7,7 @@
 ##  Architecture & Tech Stack
 
 - **Backend:** Java + Spring Boot (microservice architecture)
-- **Frontend:** Next.js (in development)
+- **Frontend:** Next.js & TypeScript
 - **Storage:**
   - PostgreSQL – main database
   - Redis – caching layer
