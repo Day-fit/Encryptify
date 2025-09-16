@@ -16,6 +16,7 @@ import pl.dayfit.encryptifyauth.repository.UserRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 /**
  * Service that gives cached database results
@@ -61,17 +62,17 @@ public class EncryptifyUserCacheService {
 
     /**
      * Deletes user by id from database and cache
-     * @param username username of user you want to remove
+     * @param userId userId of user you want to remove
      */
     @Transactional
-    public void deleteUserByUsername(String username)
+    public void deleteUserById(String userId)
     {
-        EncryptifyUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("User with id " + username + " not found"));
+        EncryptifyUser user = userRepository.findByUsername(userId)
+                .orElseThrow(() -> new NoSuchElementException("User with id " + userId + " not found"));
 
-        userRepository.deleteByUsername(username);
+        userRepository.deleteById(UUID.fromString(userId));
 
-        Cache usernameCache = cacheManager.getCache("user.username");
+        Cache usernameCache = cacheManager.getCache("user.userId");
         Cache emailCache = cacheManager.getCache("user.lookup");
         Cache idCache = cacheManager.getCache("user.id");
 
@@ -102,5 +103,11 @@ public class EncryptifyUserCacheService {
     public void deleteUser(EncryptifyUser user)
     {
         userRepository.delete(user);
+    }
+
+    @CachePut(key = "#userId", value = "user.id")
+    public EncryptifyUser getUserById(UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User with id " + userId + " not found"));
     }
 }

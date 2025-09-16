@@ -10,6 +10,8 @@ import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 import pl.dayfit.encryptifyauthlib.token.JwtAuthenticationToken;
 import pl.dayfit.encryptifyauthlib.token.JwtAuthenticationTokenCandidate;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider implements AuthenticationProvider {
@@ -18,7 +20,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String accessToken = (String) authentication.getCredentials();
-        String subject = jwtClaimsService.getSubject(accessToken); //If token is invalid, exception will be thrown
+        UUID subject = jwtClaimsService.getSubject(accessToken); //If token is invalid, exception will be thrown
 
         return new JwtAuthenticationToken(
                 jwtClaimsService.getRoles(accessToken),

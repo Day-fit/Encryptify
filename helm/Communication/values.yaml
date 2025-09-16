@@ -3,3 +3,11 @@ rabbitmq:
     enabled: true
     existingSecret: communication-config
     file: /app/load_definitions.json
+  extraPlugins: "rabbitmq_stream,rabbitmq_stream_management"
+  service:
+    ports:
+      amqp: 5672
+    extraPorts:
+      - name: stream
+        port: 5552
+        targetPort: 5552

@@ -67,9 +67,9 @@ public class JwtClaimsService {
         );
     }
 
-    public String getSubject(String token)
+    public UUID getSubject(String token)
     {
-        return extractClaim(token, JWTClaimsSet::getSubject);
+        return UUID.fromString(extractClaim(token, JWTClaimsSet::getSubject));
     }
 
     public <T> T extractClaim(String token, Function<JWTClaimsSet, T> claimsResolver)

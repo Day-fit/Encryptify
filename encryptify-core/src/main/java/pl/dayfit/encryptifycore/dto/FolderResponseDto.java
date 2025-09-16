@@ -1,6 +1,6 @@
 package pl.dayfit.encryptifycore.dto;
 
-import pl.dayfit.encryptifycore.types.FileSystemTypes;
+import pl.dayfit.encryptifycore.type.FileSystemTypes;
 
 import java.time.Instant;
 

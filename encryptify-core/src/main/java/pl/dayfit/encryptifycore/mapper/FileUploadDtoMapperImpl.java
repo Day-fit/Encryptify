@@ -16,7 +16,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
     private final DriveFolderCacheService driveFolderCacheService;
 
     @Override
-    public DriveFile toDestination(FileRequestDto fileRequestDto, long fileSize, String uploader) {
+    public DriveFile toDestination(FileRequestDto fileRequestDto, long fileSize, UUID uploaderId) {
         DriveFolder driveFolder = null;
 
         if (fileRequestDto.folderId() != null)
@@ -37,7 +37,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
 
         driveFile.setUuid(UUID.randomUUID());
         driveFile.setName(name);
-        driveFile.setUploader(uploader);
+        driveFile.setUploaderId(uploaderId);
         driveFile.setUploadDate(Instant.now());
         driveFile.setPath(path + name);
         driveFile.setFileSize(

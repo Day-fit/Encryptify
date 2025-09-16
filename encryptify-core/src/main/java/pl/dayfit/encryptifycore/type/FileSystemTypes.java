@@ -1,4 +1,4 @@
-package pl.dayfit.encryptifycore.types;
+package pl.dayfit.encryptifycore.type;
 
 import lombok.RequiredArgsConstructor;
 

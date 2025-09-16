@@ -1,4 +1,4 @@
-package pl.dayfit.encryptifycore.configuration;
+package pl.dayfit.encryptifycore.configuration.properties;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -16,6 +16,7 @@ import pl.dayfit.encryptifycore.service.FileManagementService;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,7 +52,7 @@ public class FileManagementController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> handleDeletingFile(@RequestBody FileDeleteDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
-        fileManagementService.handleFileDeletion(dto.id(), userPrincipal.getName(), userPrincipal.getBucketName());
+        fileManagementService.handleFileDeletion(dto.id(), UUID.fromString(userPrincipal.getName()), userPrincipal.getBucketName());
         return ResponseEntity
                 .ok(Map.of("message", "Successfully deleted file"));
     }

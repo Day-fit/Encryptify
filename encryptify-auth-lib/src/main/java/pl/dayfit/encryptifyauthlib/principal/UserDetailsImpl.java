@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class UserDetailsImpl implements UserDetails {
@@ -16,7 +17,7 @@ public class UserDetailsImpl implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     @Getter
-    private final long userId;
+    private final UUID userId;
     @Getter
     private final String bucketName;
 

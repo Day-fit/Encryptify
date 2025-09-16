@@ -1,6 +1,6 @@
 apiVersion: v2
 name: Encryptify-Core
 description: This is the chart of the Encryptify-Core microservice
-version: 0.0.1-SNAPSHOT
-appVersion: "0.0.1-SNAPSHOT"
+version: 0.0.1
+appVersion: "0.0.1"
 type: application

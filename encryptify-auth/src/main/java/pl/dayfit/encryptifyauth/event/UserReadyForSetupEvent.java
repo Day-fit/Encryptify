@@ -1,4 +1,6 @@
 package pl.dayfit.encryptifyauth.event;
 
-public record UserReadyForSetupEvent(String bucketName) {
+import java.util.UUID;
+
+public record UserReadyForSetupEvent(UUID userId, String bucketName) {
 }

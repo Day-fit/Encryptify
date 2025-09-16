@@ -72,7 +72,7 @@ public class EncryptifyUserService {
             throw new UserAlreadyExistsException("User already exists");
         }
 
-        cacheService
+        EncryptifyUser user = cacheService
                 .saveUser(new EncryptifyUser(
                         null,
                         passwordEncoder.encode(email),
@@ -91,12 +91,12 @@ public class EncryptifyUserService {
         if (environment.matchesProfiles("no-email"))
         {
             applicationEventPublisher
-                    .publishEvent(new UserReadyForSetupEvent(bucketName));
+                    .publishEvent(new UserReadyForSetupEvent(user.getId(), bucketName));
             return;
         }
 
         emailCommunicationService
-                .handleVerificationSending(username, email, bucketName);
+                .handleVerificationSending(username, email, bucketName, user.getId());
     }
 
     /**
@@ -106,9 +106,9 @@ public class EncryptifyUserService {
      */
     public String handleAccessTokenRefresh(String refreshToken)
     {
-        String username = jwtClaimsService.getSubject(refreshToken);
+        UUID userId = jwtClaimsService.getSubject(refreshToken);
 
-        if(checkIfUserIsBanned(username))
+        if(checkIfUserIsBanned(userId))
         {
             throw new BadCredentialsException("User is banned");
         }
@@ -120,7 +120,7 @@ public class EncryptifyUserService {
 
         return jwtService.generateToken
                 (
-                        username,
+                        userId.toString(),
                         jwtConfigurationProperties
                                 .getAccessTokenValidityMinutes(),
                         TimeUnit.MINUTES,
@@ -130,11 +130,21 @@ public class EncryptifyUserService {
 
     /**
      * Method that checks if the user is banned or not
-     * @param username username of user to check
+     * @param userId UUID of user to check
      * @return true if user is banned, false otherwise
      */
-    private boolean checkIfUserIsBanned(String username) {
-        EncryptifyUser user = cacheService.getUserByUsername(username);
+    private boolean checkIfUserIsBanned(UUID userId) {
+        EncryptifyUser user = cacheService.getUserById(userId);
         return user.isBanned();
+    }
+
+    /**
+     * Method that returns username based on UUID
+     * @param uuid user UUID
+     * @return username of a user
+     */
+    public String getUsernameByUUID(UUID uuid) {
+        return cacheService.getUserById(uuid)
+                .getUsername();
     }
 }

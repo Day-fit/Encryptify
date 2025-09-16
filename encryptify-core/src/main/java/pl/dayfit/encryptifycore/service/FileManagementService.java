@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import pl.dayfit.encryptifycore.dto.ActivityStreamDto;
 import pl.dayfit.encryptifycore.dto.FileRenameDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
 import pl.dayfit.encryptifycore.exception.FileActionException;
@@ -14,9 +15,13 @@ import pl.dayfit.encryptifycore.mapper.FileUploadDtoMapper;
 import pl.dayfit.encryptifycore.cacheservice.DriveFileCacheService;
 import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.helper.DriveFileAccessHelper;
+import pl.dayfit.encryptifycore.type.ActivityType;
+import pl.dayfit.encryptifycore.type.TargetType;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -26,21 +31,22 @@ public class FileManagementService {
     private final DriveFileCacheService driveFileCacheService;
     private final FileUploadDtoMapper fileUploadDtoMapper;
     private final MinioService minioService;
+    private final StatisticsCommunicationService statisticsCommunicationService;
 
     /**
      * Handles process of uploading the file by saving it into filesystem and database
      * @param fileRequestDto dto with file representation
      * @param file multipart file that will be uploaded
-     * @param uploader username of the uploader
+     * @param userId UUID of the userId
      * @return file's id
      */
     @Transactional
-    public long handleFileUpload(FileRequestDto fileRequestDto, final MultipartFile file, String uploader, String bucketName)
+    public long handleFileUpload(FileRequestDto fileRequestDto, final MultipartFile file, String userId, String bucketName)
     {
         DriveFile driveFile = fileUploadDtoMapper.toDestination(
                 fileRequestDto,
                 file.getSize(),
-                uploader
+                UUID.fromString(userId)
         );
 
         String path = driveFile.getPath();
@@ -62,26 +68,37 @@ public class FileManagementService {
     /**
      * Handles process of deleting a file
      * @param id id of file to delete
-     * @param uploader file uploader username
+     * @param uploaderId file uploader UUID
      * @param bucketName bucket to delete file inside
      */
     @Transactional
-    public void handleFileDeletion(long id, String uploader, String bucketName) {
-        if (!accessHelper.isOwner(id, uploader))
+    public void handleFileDeletion(long id, UUID uploaderId, String bucketName) {
+        if (!accessHelper.isOwner(id, uploaderId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
 
-        try {
-            DriveFile driveFile = driveFileCacheService.getDriveFileById(id);
-            driveFileCacheService.deleteDriveFile(driveFile);
+        DriveFile driveFile = driveFileCacheService.getDriveFileById(id);
+        driveFileCacheService.deleteDriveFile(driveFile);
 
+        try {
             minioService.deleteFile(driveFile.getPath(), bucketName);
         } catch (IOException ex) {
             throw new FileActionException("Failed to delete file");
         } catch (InsufficientDataException ex) {
             throw new FileActionException("Insufficient data for file");
         }
+
+        statisticsCommunicationService.sendActivity(
+                new ActivityStreamDto(
+                        uploaderId,
+                        driveFile.getName(),
+                        driveFile.getFileSize(),
+                        ActivityType.DELETION,
+                        TargetType.FILE,
+                        Instant.now()
+                )
+        );
     }
 
     /**
