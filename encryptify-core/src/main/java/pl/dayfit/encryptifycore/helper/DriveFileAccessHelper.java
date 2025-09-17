@@ -14,9 +14,9 @@ public class DriveFileAccessHelper {
     private final DriveFileRepository driveFileRepository;
 
     @SuppressWarnings("unused")
-    public boolean isOwner(DriveFile driveFile, String uploader)
+    public boolean isOwner(DriveFile driveFile, UUID uploaderId)
     {
-        return driveFile.getUploader().equals(uploader);
+        return driveFile.getUploaderId().equals(uploaderId);
     }
 
     public boolean isOwner(long id, UUID uploaderId)

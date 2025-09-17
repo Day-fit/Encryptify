@@ -104,14 +104,14 @@ public class FileManagementService {
     /**
      * Handles process of downloading the file by streaming Base64 into given OutputStream
      * @param fileId id of file to download
-     * @param username username of download issuer (TEMPORAL: it will be replaced when file sharing will be introduced)
+     * @param userId id of download issuer (TEMPORAL: it will be replaced when file sharing will be introduced)
      * @param bucketName bucket to download file inside
      * @param out Servlet OutputStream
      */
-    public void handleFileDownload(long fileId, String username, String bucketName, OutputStream out) {
+    public void handleFileDownload(long fileId, UUID userId, String bucketName, OutputStream out) {
         DriveFile driveFile = driveFileCacheService.getDriveFileById(fileId);
 
-        if (!accessHelper.isOwner(driveFile, username))
+        if (!accessHelper.isOwner(driveFile, userId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
@@ -129,7 +129,7 @@ public class FileManagementService {
         }
     }
 
-    public void handleFileRenaming(FileRenameDto dto, String username, String bucketName) {
+    public void handleFileRenaming(FileRenameDto dto, UUID userId, String bucketName) {
         DriveFile driveFile = driveFileCacheService.getDriveFileById(dto.id());
 
         String path = driveFile.getPath();
@@ -139,7 +139,7 @@ public class FileManagementService {
 
         String newPath = String.join("/", fragments);
 
-        if (!accessHelper.isOwner(driveFile, username))
+        if (!accessHelper.isOwner(driveFile, userId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }

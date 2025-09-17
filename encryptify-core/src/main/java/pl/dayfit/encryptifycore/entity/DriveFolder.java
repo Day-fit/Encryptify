@@ -34,7 +34,7 @@ public class DriveFolder {
     private String name;
 
     @Column(nullable = false)
-    private String uploader;
+    private UUID uploaderId;
 
     @Column(nullable = false)
     private Instant creationDate;

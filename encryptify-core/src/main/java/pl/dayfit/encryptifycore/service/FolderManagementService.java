@@ -39,21 +39,21 @@ public class FolderManagementService {
     /**
      * Handles logic of folder creation
      * @param dto DTO with folder's name and folder's parent
-     * @param username folder's owner username
+     * @param userId folder's owner id
      * @return created folder entity
      * @throws DuplicateKeyException when folder with same parent and same name already exists
      */
-    public DriveFolder createFolder(FolderCreateDto dto, String username) {
+    public DriveFolder createFolder(FolderCreateDto dto, UUID userId) {
         String name = dto.folderName();
         DriveFolder folder = new DriveFolder();
 
-        if (repository.findInSameParentAndNameAndOwner(dto.parentId(), name, username).isPresent())
+        if (repository.findInSameParentAndNameAndOwner(dto.parentId(), name, userId).isPresent())
         {
             throw new DuplicateKeyException("Folder with name " + name + " already exists");
         }
 
         folder.setName(name);
-        folder.setUploader(username);
+        folder.setUploaderId(userId);
         folder.setUuid(UUID.randomUUID());
         folder.setCreationDate(Instant.now());
 
@@ -114,13 +114,13 @@ public class FolderManagementService {
     /**
      * Handles logic of renaming a folder
      * @param renameDto DTO that contains folder id and it's new name
-     * @param username username used to check if user is folder's owner
+     * @param userId userId used to check if user is folder's owner
      */
-    public void renameFolder(FolderRenameDto renameDto, String username) {
+    public void renameFolder(FolderRenameDto renameDto, UUID userId, String bucket) {
         DriveFolder folder = driveFolderCacheService
                 .getDriveDirectoryById(renameDto.id());
 
-        if(!folder.getUploader().equals(username))
+        if(!folder.getUploaderId().equals(userId))
         {
             throw new AccessDeniedException("You are not allowed to rename this folder");
         }
@@ -132,13 +132,13 @@ public class FolderManagementService {
         pathFragments[pathFragments.length - 1] = newName;
         String newPath = String.join("/", pathFragments) + "/";
 
-        minioService.renameFolder(newPath, oldPath, folder);
+        minioService.renameFolder(newPath, oldPath, folder, bucket);
 
         String trimmedPath = newPath.endsWith("/") ? newPath.substring(0, newPath.length() - 1) : newPath;
         int lastSlash = trimmedPath.lastIndexOf('/');
         String basePath = lastSlash == -1 ? "" : trimmedPath.substring(0, lastSlash + 1);
 
-        DriveFolder parent = createFoldersInPath(basePath, username);
+        DriveFolder parent = createFoldersInPath(basePath, userId);
 
         folder.setParent(parent);
         folder.setPath(newPath);
@@ -169,17 +169,17 @@ public class FolderManagementService {
 
     /**
      * Finds files in given folder
-     * @param name uploader username (used if folderId is null)
+     * @param userId uploader id (used if folderId is null)
      * @param folderId id of folder to search files in
      * @return DTO List of files in given folder
      */
-    public List<FileSystemDto> getContent(String name, @Nullable Long folderId) {
+    public List<FileSystemDto> getContent(UUID userId, @Nullable Long folderId) {
         List<FileSystemDto> result = new ArrayList<>();
 
         if (folderId != null) {
             DriveFolder folder = driveFolderCacheService.getDriveDirectoryById(folderId);
 
-            if (!folder.getUploader().equals(name)) {
+            if (!folder.getUploaderId().equals(userId)) {
                 throw new AccessDeniedException("You are not owner of this folder");
             }
 
@@ -204,7 +204,7 @@ public class FolderManagementService {
 
         result.addAll(
                 driveFolderCacheService
-                        .getParentlessFiles(name)
+                        .getParentlessFiles(userId)
                         .stream()
                         .map(fileResponseMapper::toDto)
                         .toList()
@@ -212,7 +212,7 @@ public class FolderManagementService {
 
         result.addAll(
                 driveFolderCacheService
-                        .getParentlessFolders(name)
+                        .getParentlessFolders(userId)
                         .stream()
                         .map(folderResponseDtoMapper::toDto)
                         .toList()
@@ -224,10 +224,10 @@ public class FolderManagementService {
     /**
      * Creates folders in given path
      * @param path String representing folder path to be created
-     * @param username folders owner username
+     * @param userId folders owner userId
      * @return last created folder, null if there were no folders created
      */
-    private DriveFolder createFoldersInPath(String path, String username)
+    private DriveFolder createFoldersInPath(String path, UUID userId)
     {
         String[] folderNames = path.split("/");
         folderNames = Arrays.stream(folderNames)
@@ -249,12 +249,12 @@ public class FolderManagementService {
                                     ? null
                                     : parent.getId(),
                             folderName,
-                            username
+                            userId
                     ).orElseGet(() -> {
                         DriveFolder result = new DriveFolder();
 
                         result.setName(folderName);
-                        result.setUploader(username);
+                        result.setUploaderId(userId);
                         result.setParent(parent);
                         result.setPath((parent == null ? null : parent.getPath() + "/") + folderName + "/");
                         result.setUuid(UUID.randomUUID());

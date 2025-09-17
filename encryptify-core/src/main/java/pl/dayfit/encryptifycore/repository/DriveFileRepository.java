@@ -19,5 +19,5 @@ public interface DriveFileRepository extends JpaRepository<DriveFile, Long> {
 
     List<DriveFile> findAllByParent_Id(Long id);
 
-    List<DriveFile> findAllByParentNullAndUploader(String uploader);
+    List<DriveFile> findAllByParentNullAndUploaderId(UUID uploaderId);
 }
