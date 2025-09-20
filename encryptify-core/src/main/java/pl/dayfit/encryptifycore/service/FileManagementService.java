@@ -7,16 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import pl.dayfit.encryptifycore.dto.ActivityStreamDto;
 import pl.dayfit.encryptifycore.dto.FileRenameDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
+import pl.dayfit.encryptifycore.dto.FileStreamRequestDto;
 import pl.dayfit.encryptifycore.exception.FileActionException;
 import pl.dayfit.encryptifycore.mapper.FileUploadDtoMapper;
 import pl.dayfit.encryptifycore.cacheservice.DriveFileCacheService;
 import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.helper.DriveFileAccessHelper;
 import pl.dayfit.encryptifycore.type.ActivityType;
-import pl.dayfit.encryptifycore.type.TargetType;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,7 +33,7 @@ public class FileManagementService {
     private final StatisticsCommunicationService statisticsCommunicationService;
 
     /**
-     * Handles process of uploading the file by saving it into filesystem and database
+     * Handles the process of uploading the file by saving it into filesystem and database
      * @param fileRequestDto dto with file representation
      * @param file multipart file that will be uploaded
      * @param userId UUID of the userId
@@ -62,14 +61,23 @@ public class FileManagementService {
         }
 
         driveFileCacheService.save(driveFile);
+        statisticsCommunicationService.sendActivity(
+            new FileStreamRequestDto(
+                    driveFile.getUploaderId(),
+                    driveFile.getName(),
+                    driveFile.getFileSizeBytes(),
+                    ActivityType.UPLOAD,
+                    Instant.now()
+            )
+        );
         return driveFile.getId();
     }
 
     /**
-     * Handles process of deleting a file
-     * @param id id of file to delete
+     * Handles the process of deleting a file
+     * @param id id of a file to delete
      * @param uploaderId file uploader UUID
-     * @param bucketName bucket to delete file inside
+     * @param bucketName bucket to delete a file inside
      */
     @Transactional
     public void handleFileDeletion(long id, UUID uploaderId, String bucketName) {
@@ -90,22 +98,21 @@ public class FileManagementService {
         }
 
         statisticsCommunicationService.sendActivity(
-                new ActivityStreamDto(
+                new FileStreamRequestDto(
                         uploaderId,
                         driveFile.getName(),
-                        driveFile.getFileSize(),
+                        driveFile.getFileSizeBytes(),
                         ActivityType.DELETION,
-                        TargetType.FILE,
                         Instant.now()
                 )
         );
     }
 
     /**
-     * Handles process of downloading the file by streaming Base64 into given OutputStream
-     * @param fileId id of file to download
-     * @param userId id of download issuer (TEMPORAL: it will be replaced when file sharing will be introduced)
-     * @param bucketName bucket to download file inside
+     * Handles the process of downloading the file into a given OutputStream
+     * @param fileId id of a file to download
+     * @param userId id of download issuer (TEMPORAL: it will be replaced when file sharing is introduced)
+     * @param bucketName bucket to download a file inside
      * @param out Servlet OutputStream
      */
     public void handleFileDownload(long fileId, UUID userId, String bucketName, OutputStream out) {
@@ -127,6 +134,16 @@ public class FileManagementService {
             log.warn("Failed to download file, insufficient data for file {}", path);
             throw new FileActionException("Insufficient data for file");
         }
+
+        statisticsCommunicationService.sendActivity(
+                new FileStreamRequestDto(
+                      driveFile.getUploaderId(),
+                      driveFile.getName(),
+                      driveFile.getFileSizeBytes(),
+                      ActivityType.DOWNLOAD,
+                      Instant.now()
+                )
+        );
     }
 
     public void handleFileRenaming(FileRenameDto dto, UUID userId, String bucketName) {
@@ -157,6 +174,17 @@ public class FileManagementService {
 
         driveFile.setPath(newPath);
         driveFile.setName(newName);
+
+        statisticsCommunicationService.sendActivity(
+              new FileStreamRequestDto(
+                      driveFile.getUploaderId(),
+                      newName,
+                      driveFile.getFileSizeBytes(),
+                      ActivityType.RENAME,
+                      Instant.now()
+              )
+        );
+
         driveFileCacheService.save(driveFile);
     }
 }

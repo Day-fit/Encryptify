@@ -31,6 +31,9 @@ public class DriveFile {
     @Column(nullable = false)
     private String fileSize;
 
+    @Column(nullable = false)
+    private Long fileSizeBytes;
+
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     private DriveFolder parent;

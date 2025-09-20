@@ -10,11 +10,11 @@ import pl.dayfit.encryptifyauth.event.UserReadyForSetupEvent;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MinioCommunicationService {
+public class SetupCommunicationService {
     private final RabbitTemplate rabbitTemplate;
 
     @EventListener
-    public void requestMinioSetup(UserReadyForSetupEvent userReadyForSetupEvent)
+    public void requestUserSetup(UserReadyForSetupEvent userReadyForSetupEvent)
     {
         rabbitTemplate
                 .convertAndSend

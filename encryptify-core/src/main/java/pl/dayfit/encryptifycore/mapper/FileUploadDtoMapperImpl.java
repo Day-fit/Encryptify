@@ -22,6 +22,11 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         if (fileRequestDto.folderId() != null)
         {
             driveFolder = driveFolderCacheService.getDriveDirectoryById(fileRequestDto.folderId());
+            long bytesSize = driveFolder.getTotalSizeBytes() + fileSize;
+            driveFolder.setTotalSizeBytes(bytesSize);
+            driveFolder.setTotalSize(
+                    formatBytes(bytesSize)
+            );
         }
 
         final String name = fileRequestDto.name();
@@ -40,6 +45,7 @@ public class FileUploadDtoMapperImpl implements FileUploadDtoMapper {
         driveFile.setUploaderId(uploaderId);
         driveFile.setUploadDate(Instant.now());
         driveFile.setPath(path + name);
+        driveFile.setFileSizeBytes(fileSize);
         driveFile.setFileSize(
                 formatBytes(fileSize)
         );

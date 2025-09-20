@@ -8,14 +8,11 @@ import pl.dayfit.encryptify.stats.configuration.properties.RabbitStreamConfigura
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pl.dayfit.encryptify.stats.dto.ActivityResponseDto;
-import pl.dayfit.encryptify.stats.dto.ActivityStreamDto;
-import pl.dayfit.encryptify.stats.dto.StatisticsDto;
+import pl.dayfit.encryptify.stats.dto.*;
 import pl.dayfit.encryptify.stats.entity.RecentActivity;
 import pl.dayfit.encryptify.stats.entity.UserStatistics;
 import pl.dayfit.encryptify.stats.event.UserReadyForSetupEvent;
 import pl.dayfit.encryptify.stats.repository.UserStatisticsRepository;
-import pl.dayfit.encryptify.stats.type.TargetType;
 
 import java.util.UUID;
 
@@ -25,21 +22,20 @@ import java.util.UUID;
 public class StatisticsService {
     private final RabbitStreamConfigurationProperties rabbitStreamConfigurationProperties;
     private final UserStatisticsRepository userStatisticsRepository;
-    private final Environment environment;
+    private final Environment streamEnvironment;
 
     @PostConstruct
     public void init()
     {
-        environment.consumerBuilder()
+        streamEnvironment.consumerBuilder()
                 .stream(rabbitStreamConfigurationProperties.getStatsStreamName())
                 .offset(OffsetSpecification.first())
                 .messageHandler((context, record) -> handleActivity(record.getBody()))
-                .build()
-                .close();
+                .build();
     }
 
     /**
-     * Handles creating fresh entity of UserStatistics after email verification
+     * Handles creating a fresh entity of UserStatistics after email verification
      * @param event trigger event
      */
     @RabbitListener(queues = "statistics.configurer")
@@ -57,7 +53,7 @@ public class StatisticsService {
      */
     private void handleActivity(Object message)
     {
-        if (!(message instanceof ActivityStreamDto dto))
+        if (!(message instanceof FileSystemStreamRequestDto dto))
         {
             log.error("Invalid message received. (Implementation bug?)");
             return;
@@ -73,26 +69,28 @@ public class StatisticsService {
         {
             case UPLOAD ->   {
                 long size = statistics.getTotalStorageUsed();
-                size += dto.targetSize();
-
-                if (TargetType.FILE.equals(dto.targetType()))
+                size += dto.size();
+                statistics.setTotalStorageUsed(size);
+    
+                boolean isFolder = dto instanceof FolderStreamRequestDto;
+                long newFileCount = (isFolder? ((FolderStreamRequestDto) dto).fileCount() : 1) + statistics.getTotalFileCount();
+                statistics.setTotalFileCount(newFileCount);
+                
+                if (!isFolder)
                 {
-                    long count = statistics.getTotalFileCount() + 1;
-                    statistics.setTotalStorageUsed(size);
-                    statistics.setTotalFileCount(count);
                     break;
                 }
-
-                long count = statistics.getTotalFolderCount() + dto.targetValue();
+                
+                long count = statistics.getTotalFolderCount() + ((FolderStreamRequestDto) dto).subfolderCount() + 1;
                 statistics.setTotalFolderCount(count);
-                statistics.setTotalStorageUsed(size);
             }
 
-            case DOWNLOAD ->  {
+            case DELETION ->  {
                 long size = statistics.getTotalStorageUsed();
-                size -= dto.targetSize();
+                size -= dto.size();
 
-                if (TargetType.FILE.equals(dto.targetType()))
+                boolean isFolder = dto instanceof FolderStreamRequestDto;
+                if (!isFolder)
                 {
                     long count = statistics.getTotalFileCount() - 1;
                     statistics.setTotalStorageUsed(size);
@@ -100,19 +98,26 @@ public class StatisticsService {
                     break;
                 }
 
-                long count = statistics.getTotalFolderCount() - dto.targetValue();
+                long count = statistics.getTotalFolderCount() - ((FolderStreamRequestDto) dto).subfolderCount() - 1;
                 statistics.setTotalFolderCount(count);
                 statistics.setTotalStorageUsed(size);
             }
 
             case CREATION ->   {
-                if (TargetType.FOLDER.equals(dto.targetType()))
+                if (dto instanceof FileStreamRequestDto)
+                {
+                    log.warn("File creation activity received, but it should not be here. (Implementation bug?)");
+                    return;
+                }
+
+                long count = statistics.getTotalFolderCount() + 1;
+                statistics.setTotalFolderCount(count);
             }
         }
 
         RecentActivity recentActivity = new RecentActivity();
 
-        recentActivity.setActivityTarget(dto.targetName());
+        recentActivity.setActivityTarget(dto.name());
         recentActivity.setActivityType(dto.activityType());
         recentActivity.setTimestamp(dto.timestamp());
 

@@ -4,9 +4,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <packaging>pom</packaging>
-    <modules>
-        <module>encryptify-stats</module>
-    </modules>
 
     <groupId>pl.dayfit</groupId>
     <artifactId>encryptify</artifactId>

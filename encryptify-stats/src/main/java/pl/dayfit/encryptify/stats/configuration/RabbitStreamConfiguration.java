@@ -10,7 +10,7 @@ import pl.dayfit.encryptify.stats.configuration.properties.RabbitStreamConfigura
 @EnableConfigurationProperties({RabbitStreamConfigurationProperties.class})
 public class RabbitStreamConfiguration {
     @Bean
-    public Environment environment(RabbitStreamConfigurationProperties rabbitStreamConfigurationProperties)
+    public Environment streamEnvironment(RabbitStreamConfigurationProperties rabbitStreamConfigurationProperties)
     {
         return Environment.builder()
                 .username(rabbitStreamConfigurationProperties.getUsername())

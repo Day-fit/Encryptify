@@ -81,7 +81,7 @@ public class EncryptifyUserService {
                         passwordEncoder.encode(dto.password()),
                         Instant.now(),
                         false,
-                        false, //we are waiting for user to verify their email
+                        false, //we are waiting for the user to verify their email
                         List.of("USER"),
                         null,
                         bucketName
@@ -100,7 +100,7 @@ public class EncryptifyUserService {
     }
 
     /**
-     * Generates access token with set validity if refresh token is valid
+     * Generates an access token with set validity if the refresh token is valid
      * @param refreshToken potential refresh token content
      * @return string form of jwt access token
      */

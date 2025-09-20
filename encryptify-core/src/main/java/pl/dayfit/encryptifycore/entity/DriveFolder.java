@@ -45,4 +45,10 @@ public class DriveFolder {
 
     @Column(nullable = false)
     private String path;
+
+    @Column(nullable = false)
+    private String totalSize;
+
+    @Column(nullable = false)
+    private Long totalSizeBytes = 0L;
 }
