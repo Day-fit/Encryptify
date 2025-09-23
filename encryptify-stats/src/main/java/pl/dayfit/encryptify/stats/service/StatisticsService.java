@@ -1,7 +1,11 @@
 package pl.dayfit.encryptify.stats.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rabbitmq.stream.Consumer;
 import com.rabbitmq.stream.Environment;
 import com.rabbitmq.stream.OffsetSpecification;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import pl.dayfit.encryptify.stats.configuration.properties.RabbitStreamConfigurationProperties;
@@ -14,6 +18,7 @@ import pl.dayfit.encryptify.stats.entity.UserStatistics;
 import pl.dayfit.encryptify.stats.event.UserReadyForSetupEvent;
 import pl.dayfit.encryptify.stats.repository.UserStatisticsRepository;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Slf4j
@@ -23,15 +28,38 @@ public class StatisticsService {
     private final RabbitStreamConfigurationProperties rabbitStreamConfigurationProperties;
     private final UserStatisticsRepository userStatisticsRepository;
     private final Environment streamEnvironment;
+    private final ObjectMapper objectMapper;
+    private Consumer streamConsumer;
 
     @PostConstruct
     public void init()
     {
-        streamEnvironment.consumerBuilder()
+        streamConsumer = streamEnvironment.consumerBuilder()
                 .stream(rabbitStreamConfigurationProperties.getStatsStreamName())
-                .offset(OffsetSpecification.first())
-                .messageHandler((context, record) -> handleActivity(record.getBody()))
+                .offset(OffsetSpecification.next())
+                .messageHandler((context, record) -> {
+                    try {
+                        String json = new String(record.getBodyAsBinary(), StandardCharsets.UTF_8);
+                        handleActivity(
+                                mapToDto(json)
+                        );
+                    } catch (Exception e) {
+                        log.error("An unexpected error occurred when received message", e);
+                    }
+                })
                 .build();
+    }
+
+    @PreDestroy
+    public void close()
+    {
+        if (streamConsumer == null)
+        {
+            return;
+        }
+
+        log.info("Closing RabbitMQ Streams consumer...");
+        streamConsumer.close();
     }
 
     /**
@@ -49,16 +77,10 @@ public class StatisticsService {
 
     /**
      * Handles updating statistics of a user using RabbitMQ Streams
-     * @param message message containing necessary data
+     * @param dto message converted to FileSystemStreamRequestDto containing necessary data
      */
-    private void handleActivity(Object message)
+    private void handleActivity(FileSystemStreamRequestDto dto)
     {
-        if (!(message instanceof FileSystemStreamRequestDto dto))
-        {
-            log.error("Invalid message received. (Implementation bug?)");
-            return;
-        }
-
         UserStatistics statistics = userStatisticsRepository.findByUserId(dto.userId())
                 .orElseThrow(() -> {
                     log.error("Statistics not found for userId {}, should exist (bug?)", dto.userId());
@@ -135,15 +157,31 @@ public class StatisticsService {
 
         RecentActivity recentActivity = userStatistics.getRecentActivity();
 
+        ActivityResponseDto activityResponseDto = null;
+
+        if (recentActivity != null)
+        {
+            activityResponseDto = new ActivityResponseDto(
+                    recentActivity.getActivityTarget(),
+                    recentActivity.getActivityType(),
+                    recentActivity.getTimestamp()
+            );
+        }
+
         return new StatisticsDto(
                 userStatistics.getTotalFolderCount(),
                 userStatistics.getTotalFileCount(),
                 userStatistics.getTotalStorageUsed(),
-                new ActivityResponseDto(
-                        recentActivity.getActivityTarget(),
-                        recentActivity.getActivityType(),
-                        recentActivity.getTimestamp()
-                )
+                activityResponseDto
         );
+    }
+
+    private FileSystemStreamRequestDto mapToDto(String json) throws Exception
+    {
+        JsonNode node = objectMapper.readTree(json);
+
+        return node.has("subfolderCount")
+                ? objectMapper.readValue(json, FolderStreamRequestDto.class)
+                : objectMapper.readValue(json, FileStreamRequestDto.class);
     }
 }

@@ -11,3 +11,9 @@ rabbitmq:
       - name: stream
         port: 5552
         targetPort: 5552
+
+  networkPolicy:
+    extraIngress:
+      - ports:
+        - port: 5552
+          protocol: TCP

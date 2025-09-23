@@ -18,7 +18,7 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <LoadingSpinner />
       </div>
     )
@@ -26,25 +26,25 @@ export default function HomePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
             Welcome to Encryptify
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Secure, encrypted file management system
           </p>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div className="flex space-x-4 mb-6">
               <button
                 onClick={() => setShowLogin(true)}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                   showLogin
-                    ? 'bg-black text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-black dark:bg-white text-white dark:text-black'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 Sign In
@@ -53,8 +53,8 @@ export default function HomePage() {
                 onClick={() => setShowLogin(false)}
                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                   !showLogin
-                    ? 'bg-black text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-black dark:bg-white text-white dark:text-black'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 Sign Up
@@ -69,7 +69,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation activeView={activeView} onViewChange={setActiveView} />
       
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

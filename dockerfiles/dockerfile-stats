@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:21.0.7_6-jdk-alpine-3.21
+
+LABEL name="encryptify-stats"
+LABEL maintainer="Dayfit"
+LABEL description="Encryptify Stats Service"
+
+COPY ./.mvn /app/.mvn
+COPY ./mvnw /app/mvnw
+
+COPY ./encryptify-stats /app/encryptify-stats
+WORKDIR /app
+
+# Setup maven settings
+RUN --mount=type=secret,id=gh_name \
+    --mount=type=secret,id=github_token \
+    sh -c 'echo \
+"<settings>" \
+"  <servers>" \
+"    <server>" \
+"      <id>github</id>" \
+"      <username>$(cat /run/secrets/gh_name)</username>" \
+"      <password>$(cat /run/secrets/github_token)</password>" \
+"    </server>" \
+"  </servers>" \
+"</settings>" > /tmp/settings.xml'
+
+# Compile source code
+RUN \
+    cd /app/encryptify-core && \
+    ../mvnw package -DskipTests -s /tmp/settings.xml && \
+    mv /app/encryptify-stats/target/encryptify-stats-*.jar /app/encryptify-stats.jar
+
+CMD ["java", "-jar", "/app/encryptify-stats.jar"]
+
+EXPOSE 8084

@@ -5,6 +5,7 @@ import pl.dayfit.encryptifycore.type.ActivityType;
 import java.time.Instant;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public interface FileSystemStreamRequestDto {
     UUID userId();
     String name();

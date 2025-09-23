@@ -37,32 +37,32 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Username or Email
         </label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
           <input
             {...register('identifier', {
               required: 'Username or email is required',
             })}
             type="text"
             id="identifier"
-            className="input-field pl-10"
+            className="input-field pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
             placeholder="Enter your username or email"
           />
         </div>
         {errors.identifier && (
-          <p className="mt-1 text-sm text-red-600">{errors.identifier.message}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.identifier.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Password
         </label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
           <input
             {...register('password', {
               required: 'Password is required',
@@ -73,19 +73,19 @@ export default function LoginForm() {
             })}
             type={showPassword ? 'text' : 'password'}
             id="password"
-            className="input-field pl-10 pr-10"
+            className="input-field pl-10 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
             placeholder="Enter your password"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
         )}
       </div>
 

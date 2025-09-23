@@ -58,7 +58,6 @@ public class FolderManagementService {
         folder.setCreationDate(Instant.now());
 
         if (dto.parentId() != null) {
-
             DriveFolder parent = driveFolderCacheService.getDriveDirectoryById(dto.parentId());
 
             parent.getChildren().add(folder);

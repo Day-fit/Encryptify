@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
 import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauth.dto.AccountInfoDto;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
@@ -19,6 +20,7 @@ import pl.dayfit.encryptifyauth.helper.HashHelper;
 import pl.dayfit.encryptifyauth.repository.UserRepository;
 import pl.dayfit.encryptifyauth.token.UserDetailsToken;
 import pl.dayfit.encryptifyauth.token.UserDetailsTokenCandidate;
+import pl.dayfit.encryptifyauth.types.AccountType;
 import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
@@ -82,7 +84,7 @@ public class EncryptifyUserService {
                         Instant.now(),
                         false,
                         false, //we are waiting for the user to verify their email
-                        List.of("USER"),
+                        List.of("STANDARD"),
                         null,
                         bucketName
                 )
@@ -131,7 +133,7 @@ public class EncryptifyUserService {
     /**
      * Method that checks if the user is banned or not
      * @param userId UUID of user to check
-     * @return true if user is banned, false otherwise
+     * @return true if a user is banned, false otherwise
      */
     private boolean checkIfUserIsBanned(UUID userId) {
         EncryptifyUser user = cacheService.getUserById(userId);
@@ -139,12 +141,19 @@ public class EncryptifyUserService {
     }
 
     /**
-     * Method that returns username based on UUID
+     * Method that returns info about an account based on UUID
      * @param uuid user UUID
-     * @return username of a user
+     * @return DTO with account details
      */
-    public String getUsernameByUUID(UUID uuid) {
-        return cacheService.getUserById(uuid)
-                .getUsername();
+    public AccountInfoDto getUserInfoByUUID(UUID uuid) {
+        EncryptifyUser user = cacheService.getUserById(uuid);
+
+        return new AccountInfoDto(
+                user.getUsername(),
+                user.getRoles().stream()
+                        .map(AccountType::valueOf)
+                        .toList(),
+                user.getRegistrationDate()
+        );
     }
 }

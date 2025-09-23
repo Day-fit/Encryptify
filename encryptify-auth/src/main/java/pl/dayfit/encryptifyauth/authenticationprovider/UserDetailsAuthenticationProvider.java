@@ -5,7 +5,6 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.dayfit.encryptifyauth.accountcheck.AccountCheckChain;
@@ -34,18 +33,13 @@ public class UserDetailsAuthenticationProvider implements AuthenticationProvider
             throw new BadCredentialsException("Account does not exist or password does not match");
         }
 
-        additionalChecks(user);
+        accountCheckChain.run(user);
+
         return new UserDetailsToken(user.getAuthorities(), principal, user.getUserId());
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
         return UserDetailsTokenCandidate.class.isAssignableFrom(authentication);
-    }
-
-    private void additionalChecks(UserDetails userDetails)
-    {
-        accountCheckChain
-                .run(userDetails);
     }
 }

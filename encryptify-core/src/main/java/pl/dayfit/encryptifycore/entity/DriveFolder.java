@@ -47,7 +47,7 @@ public class DriveFolder {
     private String path;
 
     @Column(nullable = false)
-    private String totalSize;
+    private String totalSize = "0 B";
 
     @Column(nullable = false)
     private Long totalSizeBytes = 0L;

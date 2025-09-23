@@ -31,8 +31,8 @@ public class EncryptifyUserController {
     @GetMapping("/info")
     public ResponseEntity<?> getInfo(@AuthenticationPrincipal final Principal principal)
     {
-        return ResponseEntity.ok(Map.of("username",
-                encryptifyUserService.getUsernameByUUID(UUID.fromString(principal.getName()))
-        ));
+        return ResponseEntity.ok(
+                encryptifyUserService.getUserInfoByUUID(UUID.fromString(principal.getName()))
+        );
     }
 }

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: Encryptify-Stats
+description: This is the chart of the Encryptify-Stats microservice
+version: 0.0.1
+appVersion: "0.0.1"
+type: application

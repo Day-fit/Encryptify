@@ -17,8 +17,15 @@ interface AuthResponse {
   message: string
 }
 
+interface AccountType {
+  ADMIN: 'ADMIN'
+  STANDARD: 'STANDARD'
+}
+
 interface InfoResponse {
   username: string
+  accountType: string[]
+  registrationDate: string
 }
 
 class AuthService {

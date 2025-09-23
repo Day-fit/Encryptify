@@ -18,7 +18,7 @@ public class RabbitStreamConfiguration {
     public Environment streamEnvironment(RabbitStreamConfigurationProperties rabbitStreamConfigurationProperties)
     {
         final int streamPort = 5552;
-        Address entrypoint = new Address("http://" + rabbitStreamConfigurationProperties.getHost(), streamPort);
+        Address entrypoint = new Address(rabbitStreamConfigurationProperties.getHost(), streamPort);
 
         return Environment.builder()
                 .rpcTimeout(Duration.ofSeconds(30))
