@@ -6,13 +6,14 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.security.Principal;
 import java.util.Collection;
+import java.util.UUID;
 
 public class UserDetailsToken extends AbstractAuthenticationToken {
     private final Principal principal;
     @Getter
-    private final long userId;
+    private final UUID userId;
 
-    public UserDetailsToken(Collection<? extends GrantedAuthority> authorities, Principal user, long userId) {
+    public UserDetailsToken(Collection<? extends GrantedAuthority> authorities, Principal user, UUID userId) {
         super(authorities);
         this.principal = user;
         this.userId = userId;

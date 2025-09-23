@@ -151,8 +151,7 @@ public class MinioService {
      * @param folder instance of the DriveFolder Entity
      * @throws FileActionException when exception is thrown during execution
      */
-    public void renameFolder(String newBasePath, String oldBasePath, DriveFolder folder) {
-        String uploader = folder.getUploader();
+    public void renameFolder(String newBasePath, String oldBasePath, DriveFolder folder, String bucket) {
         List<Pair<String, String>> pathPairs = getPathsToChange(folder, newBasePath, oldBasePath);
         List<String> toDelete = new ArrayList<>();
 
@@ -162,11 +161,11 @@ public class MinioService {
                     String oldPath = pair.getLeft();
                     minioClient.copyObject(
                             CopyObjectArgs.builder()
-                                    .bucket(folder.getUploader())
+                                    .bucket(bucket)
                                     .object(pair.getRight())
                                     .source(
                                             CopySource.builder()
-                                                    .bucket(uploader)
+                                                    .bucket(bucket)
                                                     .object(oldPath)
                                                     .build()
                                     )
@@ -176,7 +175,7 @@ public class MinioService {
                     toDelete.add(oldPath);
             }
 
-            deleteFiles(uploader, toDelete.toArray(String[]::new));
+            deleteFiles(bucket, toDelete.toArray(String[]::new));
         } catch (Exception e) {
             log.warn("Error while renaming folder. Reason: {}", e.getMessage());
             throw new FileActionException("Error while renaming folder. Try again later.");

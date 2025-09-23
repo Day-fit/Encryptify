@@ -57,7 +57,7 @@ public class DriveFileCacheService {
             return;
         }
 
-        cache.put(result.getUploader(), result);
+        cache.put(result.getUploaderId(), result);
     }
 
     @SuppressWarnings("unused")
@@ -72,7 +72,7 @@ public class DriveFileCacheService {
 
         if (driveFile.getParent() == null && parentCache != null)
         {
-            parentCache.evict(driveFile.getUploader());
+            parentCache.evict(driveFile.getUploaderId());
         }
 
         if(cache != null)
@@ -102,7 +102,7 @@ public class DriveFileCacheService {
 
             if (cache != null)
             {
-                cache.evict(driveFile.getUploader());
+                cache.evict(driveFile.getUploaderId());
             }
 
             driveFileRepository.delete(driveFile);

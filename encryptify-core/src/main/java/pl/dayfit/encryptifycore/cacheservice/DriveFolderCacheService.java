@@ -16,6 +16,7 @@ import pl.dayfit.encryptifycore.repository.DriveFileRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -88,14 +89,14 @@ public class DriveFolderCacheService {
         return driveFileRepository.findAllByParent_Id(folderId);
     }
 
-    @Cacheable(key = "uploader", value = "parentless.files")
-    public List<DriveFile> getParentlessFiles(String uploader) {
-        return driveFileRepository.findAllByParentNullAndUploader(uploader);
+    @Cacheable(key = "#uploaderId", value = "parentless.files")
+    public List<DriveFile> getParentlessFiles(UUID uploaderId) {
+        return driveFileRepository.findAllByParentNullAndUploaderId(uploaderId);
     }
 
-    @Cacheable(key = "uploader", value = "parentless.folders")
-    public List<DriveFolder> getParentlessFolders(String uploader) {
-        return driveFolderRepository.findAllByParentNullAndUploader(uploader);
+    @Cacheable(key = "#uploaderId", value = "parentless.folders")
+    public List<DriveFolder> getParentlessFolders(UUID uploaderId) {
+        return driveFolderRepository.findAllByParentNullAndUploaderId(uploaderId);
     }
 
     @Cacheable(key = "#folderId", value = "folder.folders")

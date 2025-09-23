@@ -16,6 +16,7 @@ import pl.dayfit.encryptifycore.service.FileManagementService;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class FileManagementController {
         response.setContentType("application/octet-stream");
 
         try (OutputStream out = response.getOutputStream()) {
-            fileManagementService.handleFileDownload(fileId, userPrincipal.getName(), userPrincipal.getBucketName(), out);
+            fileManagementService.handleFileDownload(fileId, UUID.fromString(userPrincipal.getName()), userPrincipal.getBucketName(), out);
         } catch (IOException ex) {
             throw new FileActionException("Failed to download a file. Try again later");
         }
@@ -51,14 +52,14 @@ public class FileManagementController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> handleDeletingFile(@RequestBody FileDeleteDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
-        fileManagementService.handleFileDeletion(dto.id(), userPrincipal.getName(), userPrincipal.getBucketName());
+        fileManagementService.handleFileDeletion(dto.id(), UUID.fromString(userPrincipal.getName()), userPrincipal.getBucketName());
         return ResponseEntity
                 .ok(Map.of("message", "Successfully deleted file"));
     }
 
     @PatchMapping("/rename")
     public ResponseEntity<Map<String, String>> handleFileRenaming(@RequestBody FileRenameDto dto, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        fileManagementService.handleFileRenaming(dto, userPrincipal.getName(), userPrincipal.getBucketName());
+        fileManagementService.handleFileRenaming(dto, UUID.fromString(userPrincipal.getName()), userPrincipal.getBucketName());
 
         return ResponseEntity
                 .ok(Map.of("message", "Successfully renamed file"));

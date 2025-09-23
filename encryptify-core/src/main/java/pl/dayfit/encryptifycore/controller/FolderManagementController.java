@@ -11,6 +11,7 @@ import pl.dayfit.encryptifycore.service.FolderManagementService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +23,8 @@ public class FolderManagementController {
     public ResponseEntity<Map<String, Long>> createFolder(@RequestBody FolderCreateDto folderCreateDto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
         DriveFolder folder = folderManagementService
-                .createFolder(folderCreateDto, userPrincipal.getName());
+                .createFolder(folderCreateDto,
+                        UUID.fromString(userPrincipal.getName()));
 
         return ResponseEntity
                 .ok(Map.of("id", folder.getId()));
@@ -42,7 +44,7 @@ public class FolderManagementController {
     public ResponseEntity<Map<String, String>> renameFolder(@RequestBody FolderRenameDto  folderRenameDto, @AuthenticationPrincipal UserPrincipal userPrincipal)
     {
         folderManagementService
-                .renameFolder(folderRenameDto,  userPrincipal.getName());
+                .renameFolder(folderRenameDto, UUID.fromString(userPrincipal.getName()), userPrincipal.getBucketName());
 
         return ResponseEntity
                 .ok(Map.of("message", "Folder renamed successfully"));
@@ -53,7 +55,7 @@ public class FolderManagementController {
     {
         List<? extends FileSystemDto> dtoList =
                 folderManagementService.getContent(
-                        userPrincipal.getName(),
+                        UUID.fromString(userPrincipal.getName()),
                         folderId
                 );
 

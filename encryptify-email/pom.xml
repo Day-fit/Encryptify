@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>pl.dayfit</groupId>
 	<artifactId>encryptify-email</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>encryptify-email</name>
 	<description>encryptify-email</description>
 	<url/>

@@ -6,11 +6,11 @@ import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<EncryptifyUser, Long> {
+public interface UserRepository extends JpaRepository<EncryptifyUser, UUID> {
     Optional<EncryptifyUser> findByUsername(String username);
-    Optional<EncryptifyUser> findById(long id);
     boolean existsByUsername(String username);
     boolean existsByEmailHashLookup(String lookup);
     Optional<List<EncryptifyUser>> findAllByEmailHashLookup(String lookup);

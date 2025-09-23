@@ -6,6 +6,7 @@ import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.repository.DriveFileRepository;
 
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -13,15 +14,15 @@ public class DriveFileAccessHelper {
     private final DriveFileRepository driveFileRepository;
 
     @SuppressWarnings("unused")
-    public boolean isOwner(DriveFile driveFile, String uploader)
+    public boolean isOwner(DriveFile driveFile, UUID uploaderId)
     {
-        return driveFile.getUploader().equals(uploader);
+        return driveFile.getUploaderId().equals(uploaderId);
     }
 
-    public boolean isOwner(long id, String username)
+    public boolean isOwner(long id, UUID uploaderId)
     {
-        return driveFileRepository.findUploader_UsernameById(id)
+        return driveFileRepository.findUploader_IdById(id)
                 .orElseThrow(() -> new NoSuchElementException("There is no file with ID " + id))
-                .equals(username);
+                .equals(uploaderId);
     }
 }

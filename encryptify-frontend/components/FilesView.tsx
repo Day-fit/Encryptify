@@ -218,19 +218,19 @@ export default function FilesView() {
   const renderListItem = (item: FileSystemItem) => (
     <div
       key={`${item.type}-${item.id}`}
-      className="flex items-center justify-between p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer"
+      className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 cursor-pointer"
       onClick={() => handleItemClick(item)}
       onContextMenu={(e) => handleContextMenu(e, item)}
     >
       <div className="flex items-center space-x-3">
         {item.type === 'FOLDER' ? (
-          <Folder className="h-5 w-5 text-blue-500" />
+          <Folder className="h-5 w-5 text-blue-500 dark:text-blue-400" />
         ) : (
-          <File className="h-5 w-5 text-gray-500" />
+          <File className="h-5 w-5 text-gray-500 dark:text-gray-400" />
         )}
         <div>
-          <p className="font-medium text-gray-900">{item.name}</p>
-          <p className="text-sm text-gray-500">
+          <p className="font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {item.type === 'FILE' 
               ? `${item.fileSize} • ${item.uploadDate}`
               : `Created ${item.creationDate}`
@@ -285,18 +285,18 @@ export default function FilesView() {
   const renderGridItem = (item: FileSystemItem) => (
     <div
       key={`${item.type}-${item.id}`}
-      className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm cursor-pointer bg-white"
+      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-sm cursor-pointer bg-white dark:bg-gray-700"
       onClick={() => handleItemClick(item)}
       onContextMenu={(e) => handleContextMenu(e, item)}
     >
       <div className="text-center">
         {item.type === 'FOLDER' ? (
-          <Folder className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+          <Folder className="h-12 w-12 text-blue-500 dark:text-blue-400 mx-auto mb-3" />
         ) : (
-          <File className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+          <File className="h-12 w-12 text-gray-500 dark:text-gray-400 mx-auto mb-3" />
         )}
-        <p className="font-medium text-gray-900 text-sm truncate">{item.name}</p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{item.name}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {item.type === 'FILE' ? item.fileSize : 'Folder'}
         </p>
       </div>
@@ -341,14 +341,14 @@ export default function FilesView() {
           {currentFolderId && (
             <button
               onClick={() => setCurrentFolderId(null)}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Files</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Files</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {currentFolderId ? 'Current folder' : 'Root directory'}
             </p>
           </div>
@@ -390,17 +390,17 @@ export default function FilesView() {
       </div>
 
       {/* File List */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-gray-500">Loading...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
+            <p className="mt-2 text-gray-500 dark:text-gray-400">Loading...</p>
           </div>
         ) : items.length === 0 ? (
           <div className="p-8 text-center">
-            <Folder className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">No files or folders yet</p>
-            <p className="text-sm text-gray-400 mt-1">Upload a file or create a folder to get started</p>
+            <Folder className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400">No files or folders yet</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Upload a file or create a folder to get started</p>
           </div>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4' : ''}>

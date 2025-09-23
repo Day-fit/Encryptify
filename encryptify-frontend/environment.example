@@ -3,6 +3,7 @@ NEXT_PUBLIC_AUTH_URL=http://localhost:8083/api/v1/
 NEXT_PUBLIC_CORE_URL=http://localhost:8081/api/v1
 NEXT_PUBLIC_ENCRYPTION_URL=http://localhost:8081/api/v1
 NEXT_PUBLIC_EMAIL_URL=http://localhost:8082/api/v1
+NEXT_PUBLIC_STATS_URL=http://localhost:8084/api/v1/statistics
 
 # Development
 NODE_ENV=development

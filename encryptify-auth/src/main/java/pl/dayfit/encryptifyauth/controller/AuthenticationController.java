@@ -59,13 +59,13 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequestDTO dto, HttpServletResponse response)
     {
-        String username = encryptifyUserService.handleLogin(dto);
+        String idAsString = encryptifyUserService.handleLogin(dto);
 
         ResponseCookie accessTokenCookie = ResponseCookie.from(
                     accessTokenName,
                     jwtService.generateToken
                             (
-                                    username,
+                                    idAsString,
                                     accessTokenValidityMinutes,
                                     TimeUnit.MINUTES,
                                     JwtTokenType.ACCESS_TOKEN
@@ -81,7 +81,7 @@ public class AuthenticationController {
                     refreshTokenName,
                     jwtService.generateToken
                             (
-                                    username,
+                                    idAsString,
                                     refreshTokenValidityDays,
                                     TimeUnit.DAYS,
                                     JwtTokenType.REFRESH_TOKEN

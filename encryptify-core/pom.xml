@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>encryptify-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -94,7 +94,7 @@
         <dependency>
             <groupId>pl.dayfit</groupId>
             <artifactId>encryptify-auth-lib</artifactId>
-            <version>0.0.1.6</version>
+            <version>0.0.1.7</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -108,6 +108,10 @@
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
             <version>8.5.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit-stream</artifactId>
         </dependency>
     </dependencies>
 

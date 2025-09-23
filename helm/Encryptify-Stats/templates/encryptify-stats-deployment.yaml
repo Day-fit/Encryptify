@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats-deployment
+  labels:
+    service-name: stats
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      service-name: stats
+  template:
+    metadata:
+      name: encryptify-stats
+      labels:
+        service-name: stats
+    spec:
+      containers:
+        - name: encryptify-stats
+          image: "{{ .Values.image.repo}}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: REDIS_PASSWORD
+
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: RABBITMQ_USER
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: RABBITMQ_PASSWORD
+            - name: RABBITMQ_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: RABBITMQ_HOST
+
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: DB_HOST
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: DB_NAME
+
+            - name: JWKS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.auth.existingSecretName }}
+                  key: JWKS_URI

@@ -34,7 +34,7 @@ public class DriveFolder {
     private String name;
 
     @Column(nullable = false)
-    private String uploader;
+    private UUID uploaderId;
 
     @Column(nullable = false)
     private Instant creationDate;
@@ -45,4 +45,10 @@ public class DriveFolder {
 
     @Column(nullable = false)
     private String path;
+
+    @Column(nullable = false)
+    private String totalSize = "0 B";
+
+    @Column(nullable = false)
+    private Long totalSizeBytes = 0L;
 }

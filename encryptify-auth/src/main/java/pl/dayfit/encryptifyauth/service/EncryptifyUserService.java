@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.dayfit.encryptifyauth.authenticationprovider.UserDetailsAuthenticationProvider;
 import pl.dayfit.encryptifyauth.cacheservice.EncryptifyUserCacheService;
 import pl.dayfit.encryptifyauth.configuration.JwtConfigurationProperties;
+import pl.dayfit.encryptifyauth.dto.AccountInfoDto;
 import pl.dayfit.encryptifyauth.dto.LoginRequestDTO;
 import pl.dayfit.encryptifyauth.dto.RegisterRequestDTO;
 import pl.dayfit.encryptifyauth.entity.EncryptifyUser;
@@ -19,6 +20,7 @@ import pl.dayfit.encryptifyauth.helper.HashHelper;
 import pl.dayfit.encryptifyauth.repository.UserRepository;
 import pl.dayfit.encryptifyauth.token.UserDetailsToken;
 import pl.dayfit.encryptifyauth.token.UserDetailsTokenCandidate;
+import pl.dayfit.encryptifyauth.types.AccountType;
 import pl.dayfit.encryptifyauthlib.service.JwtClaimsService;
 import pl.dayfit.encryptifyauthlib.type.JwtTokenType;
 
@@ -72,7 +74,7 @@ public class EncryptifyUserService {
             throw new UserAlreadyExistsException("User already exists");
         }
 
-        cacheService
+        EncryptifyUser user = cacheService
                 .saveUser(new EncryptifyUser(
                         null,
                         passwordEncoder.encode(email),
@@ -81,8 +83,8 @@ public class EncryptifyUserService {
                         passwordEncoder.encode(dto.password()),
                         Instant.now(),
                         false,
-                        false, //we are waiting for user to verify their email
-                        List.of("USER"),
+                        false, //we are waiting for the user to verify their email
+                        List.of("STANDARD"),
                         null,
                         bucketName
                 )
@@ -91,24 +93,24 @@ public class EncryptifyUserService {
         if (environment.matchesProfiles("no-email"))
         {
             applicationEventPublisher
-                    .publishEvent(new UserReadyForSetupEvent(bucketName));
+                    .publishEvent(new UserReadyForSetupEvent(user.getId(), bucketName));
             return;
         }
 
         emailCommunicationService
-                .handleVerificationSending(username, email, bucketName);
+                .handleVerificationSending(username, email, bucketName, user.getId());
     }
 
     /**
-     * Generates access token with set validity if refresh token is valid
+     * Generates an access token with set validity if the refresh token is valid
      * @param refreshToken potential refresh token content
      * @return string form of jwt access token
      */
     public String handleAccessTokenRefresh(String refreshToken)
     {
-        String username = jwtClaimsService.getSubject(refreshToken);
+        UUID userId = jwtClaimsService.getSubject(refreshToken);
 
-        if(checkIfUserIsBanned(username))
+        if(checkIfUserIsBanned(userId))
         {
             throw new BadCredentialsException("User is banned");
         }
@@ -120,7 +122,7 @@ public class EncryptifyUserService {
 
         return jwtService.generateToken
                 (
-                        username,
+                        userId.toString(),
                         jwtConfigurationProperties
                                 .getAccessTokenValidityMinutes(),
                         TimeUnit.MINUTES,
@@ -130,11 +132,28 @@ public class EncryptifyUserService {
 
     /**
      * Method that checks if the user is banned or not
-     * @param username username of user to check
-     * @return true if user is banned, false otherwise
+     * @param userId UUID of user to check
+     * @return true if a user is banned, false otherwise
      */
-    private boolean checkIfUserIsBanned(String username) {
-        EncryptifyUser user = cacheService.getUserByUsername(username);
+    private boolean checkIfUserIsBanned(UUID userId) {
+        EncryptifyUser user = cacheService.getUserById(userId);
         return user.isBanned();
+    }
+
+    /**
+     * Method that returns info about an account based on UUID
+     * @param uuid user UUID
+     * @return DTO with account details
+     */
+    public AccountInfoDto getUserInfoByUUID(UUID uuid) {
+        EncryptifyUser user = cacheService.getUserById(uuid);
+
+        return new AccountInfoDto(
+                user.getUsername(),
+                user.getRoles().stream()
+                        .map(AccountType::valueOf)
+                        .toList(),
+                user.getRegistrationDate()
+        );
     }
 }

@@ -16,6 +16,7 @@ import pl.dayfit.encryptifyauth.exception.NoUniqueCodeException;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.UUID;
 
 @Service
 @EnableConfigurationProperties(EmailCodeConfigurationProperties.class)
@@ -42,8 +43,10 @@ public class EmailCommunicationService {
      * Handles process of sending a message to rabbitMQ when user is registered
      * @param username name of the user
      * @param email email address of the user
+     * @param bucketName name of the bucket to create
+     * @param userId UUID of the subject
      */
-    public void handleVerificationSending(final String username, final String email, final String bucketName)
+    public void handleVerificationSending(final String username, final String email, final String bucketName, UUID userId)
     {
         rabbitTemplate.convertAndSend
                 (
@@ -58,7 +61,7 @@ public class EmailCommunicationService {
                 );
 
         applicationEventPublisher
-                .publishEvent(new UserReadyForSetupEvent(bucketName));
+                .publishEvent(new UserReadyForSetupEvent(userId, bucketName));
     }
 
     /**

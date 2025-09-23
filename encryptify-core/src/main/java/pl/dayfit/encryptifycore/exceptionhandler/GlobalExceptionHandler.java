@@ -6,10 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import pl.dayfit.encryptifycore.exception.FileActionException;
 
@@ -51,12 +53,13 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
 
-    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class, HttpMessageNotReadableException.class})
-    public ResponseEntity<Map<String, String>> handleBadRequestExceptions()
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class,
+            HttpMessageNotReadableException.class, MultipartException.class, HttpMediaTypeNotSupportedException.class})
+    public ResponseEntity<Map<String, String>> handleBadRequestExceptions(Exception e)
     {
         return ResponseEntity
                 .badRequest()
-                .body(Map.of("error", "Something is wrong with your request!"));
+                .body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

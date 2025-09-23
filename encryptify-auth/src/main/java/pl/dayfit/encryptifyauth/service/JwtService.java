@@ -22,20 +22,20 @@ public class JwtService {
 
     /**
      * Generates JWT token based on parameters
-     * @param username subject username
+     * @param userId subject UUID
      * @param expiration token validity time
      * @param timeUnit time unit of the expiration time
      * @param tokenType enum that represents token type
      * @return generated token
      */
-    public String generateToken(String username, long expiration, TimeUnit timeUnit, JwtTokenType tokenType)
+    public String generateToken(String userId, long expiration, TimeUnit timeUnit, JwtTokenType tokenType)
     {
         expiration = timeUnit.toMillis(expiration);
-        EncryptifyUser user = encryptifyUserCacheService.getUserByUsername(username);
+        EncryptifyUser user = encryptifyUserCacheService.getUserById(UUID.fromString(userId));
 
         try {
             JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-                    .subject(username)
+                    .subject(userId)
                     .expirationTime(new Date(System.currentTimeMillis() + expiration))
                     .issueTime(new Date())
                     .jwtID(UUID.randomUUID().toString())

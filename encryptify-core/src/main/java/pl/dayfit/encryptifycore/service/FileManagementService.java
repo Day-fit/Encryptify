@@ -9,14 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pl.dayfit.encryptifycore.dto.FileRenameDto;
 import pl.dayfit.encryptifycore.dto.FileRequestDto;
+import pl.dayfit.encryptifycore.dto.FileStreamRequestDto;
 import pl.dayfit.encryptifycore.exception.FileActionException;
 import pl.dayfit.encryptifycore.mapper.FileUploadDtoMapper;
 import pl.dayfit.encryptifycore.cacheservice.DriveFileCacheService;
 import pl.dayfit.encryptifycore.entity.DriveFile;
 import pl.dayfit.encryptifycore.helper.DriveFileAccessHelper;
+import pl.dayfit.encryptifycore.type.ActivityType;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -26,21 +30,22 @@ public class FileManagementService {
     private final DriveFileCacheService driveFileCacheService;
     private final FileUploadDtoMapper fileUploadDtoMapper;
     private final MinioService minioService;
+    private final StatisticsCommunicationService statisticsCommunicationService;
 
     /**
-     * Handles process of uploading the file by saving it into filesystem and database
+     * Handles the process of uploading the file by saving it into filesystem and database
      * @param fileRequestDto dto with file representation
      * @param file multipart file that will be uploaded
-     * @param uploader username of the uploader
+     * @param userId UUID of the userId
      * @return file's id
      */
     @Transactional
-    public long handleFileUpload(FileRequestDto fileRequestDto, final MultipartFile file, String uploader, String bucketName)
+    public long handleFileUpload(FileRequestDto fileRequestDto, final MultipartFile file, String userId, String bucketName)
     {
         DriveFile driveFile = fileUploadDtoMapper.toDestination(
                 fileRequestDto,
                 file.getSize(),
-                uploader
+                UUID.fromString(userId)
         );
 
         String path = driveFile.getPath();
@@ -56,45 +61,64 @@ public class FileManagementService {
         }
 
         driveFileCacheService.save(driveFile);
+        statisticsCommunicationService.sendActivity(
+            new FileStreamRequestDto(
+                    driveFile.getUploaderId(),
+                    driveFile.getName(),
+                    driveFile.getFileSizeBytes(),
+                    ActivityType.UPLOAD,
+                    Instant.now()
+            )
+        );
         return driveFile.getId();
     }
 
     /**
-     * Handles process of deleting a file
-     * @param id id of file to delete
-     * @param uploader file uploader username
-     * @param bucketName bucket to delete file inside
+     * Handles the process of deleting a file
+     * @param id id of a file to delete
+     * @param uploaderId file uploader UUID
+     * @param bucketName bucket to delete a file inside
      */
     @Transactional
-    public void handleFileDeletion(long id, String uploader, String bucketName) {
-        if (!accessHelper.isOwner(id, uploader))
+    public void handleFileDeletion(long id, UUID uploaderId, String bucketName) {
+        if (!accessHelper.isOwner(id, uploaderId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
 
-        try {
-            DriveFile driveFile = driveFileCacheService.getDriveFileById(id);
-            driveFileCacheService.deleteDriveFile(driveFile);
+        DriveFile driveFile = driveFileCacheService.getDriveFileById(id);
+        driveFileCacheService.deleteDriveFile(driveFile);
 
+        try {
             minioService.deleteFile(driveFile.getPath(), bucketName);
         } catch (IOException ex) {
             throw new FileActionException("Failed to delete file");
         } catch (InsufficientDataException ex) {
             throw new FileActionException("Insufficient data for file");
         }
+
+        statisticsCommunicationService.sendActivity(
+                new FileStreamRequestDto(
+                        uploaderId,
+                        driveFile.getName(),
+                        driveFile.getFileSizeBytes(),
+                        ActivityType.DELETION,
+                        Instant.now()
+                )
+        );
     }
 
     /**
-     * Handles process of downloading the file by streaming Base64 into given OutputStream
-     * @param fileId id of file to download
-     * @param username username of download issuer (TEMPORAL: it will be replaced when file sharing will be introduced)
-     * @param bucketName bucket to download file inside
+     * Handles the process of downloading the file into a given OutputStream
+     * @param fileId id of a file to download
+     * @param userId id of download issuer (TEMPORAL: it will be replaced when file sharing is introduced)
+     * @param bucketName bucket to download a file inside
      * @param out Servlet OutputStream
      */
-    public void handleFileDownload(long fileId, String username, String bucketName, OutputStream out) {
+    public void handleFileDownload(long fileId, UUID userId, String bucketName, OutputStream out) {
         DriveFile driveFile = driveFileCacheService.getDriveFileById(fileId);
 
-        if (!accessHelper.isOwner(driveFile, username))
+        if (!accessHelper.isOwner(driveFile, userId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
@@ -110,9 +134,19 @@ public class FileManagementService {
             log.warn("Failed to download file, insufficient data for file {}", path);
             throw new FileActionException("Insufficient data for file");
         }
+
+        statisticsCommunicationService.sendActivity(
+                new FileStreamRequestDto(
+                      driveFile.getUploaderId(),
+                      driveFile.getName(),
+                      driveFile.getFileSizeBytes(),
+                      ActivityType.DOWNLOAD,
+                      Instant.now()
+                )
+        );
     }
 
-    public void handleFileRenaming(FileRenameDto dto, String username, String bucketName) {
+    public void handleFileRenaming(FileRenameDto dto, UUID userId, String bucketName) {
         DriveFile driveFile = driveFileCacheService.getDriveFileById(dto.id());
 
         String path = driveFile.getPath();
@@ -122,7 +156,7 @@ public class FileManagementService {
 
         String newPath = String.join("/", fragments);
 
-        if (!accessHelper.isOwner(driveFile, username))
+        if (!accessHelper.isOwner(driveFile, userId))
         {
             throw new AccessDeniedException("You are not owner of this file");
         }
@@ -140,6 +174,17 @@ public class FileManagementService {
 
         driveFile.setPath(newPath);
         driveFile.setName(newName);
+
+        statisticsCommunicationService.sendActivity(
+              new FileStreamRequestDto(
+                      driveFile.getUploaderId(),
+                      newName,
+                      driveFile.getFileSizeBytes(),
+                      ActivityType.RENAME,
+                      Instant.now()
+              )
+        );
+
         driveFileCacheService.save(driveFile);
     }
 }

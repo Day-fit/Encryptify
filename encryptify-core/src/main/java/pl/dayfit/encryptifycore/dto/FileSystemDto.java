@@ -1,7 +1,7 @@
 package pl.dayfit.encryptifycore.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import pl.dayfit.encryptifycore.types.FileSystemTypes;
+import pl.dayfit.encryptifycore.type.FileSystemTypes;
 
 public interface FileSystemDto {
     Long id();

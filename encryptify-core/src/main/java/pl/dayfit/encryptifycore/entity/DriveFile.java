@@ -26,10 +26,13 @@ public class DriveFile {
     private Instant uploadDate;
 
     @Column(nullable = false)
-    private String uploader;
+    private UUID uploaderId;
 
     @Column(nullable = false)
     private String fileSize;
+
+    @Column(nullable = false)
+    private Long fileSizeBytes;
 
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)

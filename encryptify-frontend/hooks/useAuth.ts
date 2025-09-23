@@ -5,6 +5,8 @@ import { authService } from '@/services/authService'
 
 interface User {
     username: string
+    accountType: string[]
+    registrationDate: string
 }
 
 interface AuthContextType {
@@ -27,6 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const userInfo = await authService.info()
                 setUser({
                     username: userInfo.username,
+                    accountType: userInfo.accountType,
+                    registrationDate: userInfo.registrationDate,
                 })
             } catch (error) {
                 // User is not authenticated
@@ -56,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             setUser({
                 username: userInfo.username,
+                accountType: userInfo.accountType,
+                registrationDate: userInfo.registrationDate,
             })
 
         } catch (error) {
