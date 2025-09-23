@@ -36,12 +36,12 @@ spec:
             - name: RABBITMQ_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.auth.existingSecretName}}
+                  name: {{ .Values.auth.existingSecretName }}
                   key: RABBITMQ_USER
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.auth.existingSecretName}}
+                  name: {{ .Values.auth.existingSecretName }}
                   key: RABBITMQ_PASSWORD
             - name: RABBITMQ_HOST
               valueFrom:
@@ -52,7 +52,7 @@ spec:
             - name: DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.auth.existingSecretName}}
+                  name: {{ .Values.auth.existingSecretName }}
                   key: DB_HOST
             - name: DB_USERNAME
               valueFrom:

@@ -95,7 +95,7 @@ public class StatisticsService {
                 statistics.setTotalStorageUsed(size);
     
                 boolean isFolder = dto instanceof FolderStreamRequestDto;
-                long newFileCount = (isFolder? ((FolderStreamRequestDto) dto).fileCount() : 1) + statistics.getTotalFileCount();
+                long newFileCount = (isFolder ? ((FolderStreamRequestDto) dto).fileCount() : 1) + statistics.getTotalFileCount();
                 statistics.setTotalFileCount(newFileCount);
                 
                 if (!isFolder)
