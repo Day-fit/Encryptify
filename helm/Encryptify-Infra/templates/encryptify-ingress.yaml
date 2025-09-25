@@ -30,6 +30,14 @@ spec:
                   number: 8082
             pathType: Prefix
 
+          - path: /api/v1/statistics
+            backend:
+              service:
+                name: stats-service
+                port:
+                  number: 8084
+            pathType: Prefix
+
           - path: /api/v1/
             backend:
               service:
