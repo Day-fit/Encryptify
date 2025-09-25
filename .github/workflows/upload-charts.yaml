@@ -19,7 +19,7 @@ jobs:
       - name: Build helm dependencies
         run: | 
           cd helm/Data
-          helm add repo bitnami https://charts.bitnami.com/bitnami
+          helm repo add bitnami https://charts.bitnami.com/bitnami
           helm dependency build
 
       - name: Copy charts
