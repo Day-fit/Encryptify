@@ -1,4 +1,4 @@
-name: Upload rendered charts into CD repository
+name: Upload charts into CD repository
 on:
   release:
     types:
@@ -19,6 +19,7 @@ jobs:
       - name: Build helm dependencies
         run: | 
           cd helm/Data
+          helm add repo bitnami https://charts.bitnami.com/bitnami
           helm dependency build
 
       - name: Copy charts
