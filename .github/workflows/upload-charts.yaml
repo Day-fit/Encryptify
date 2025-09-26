@@ -29,7 +29,6 @@ jobs:
 
       - name: Add version in Values.yaml for Encryptify Apps
         run: |
-          cd charts
           yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Auth/values.yaml
           yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Core/values.yaml
           yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Email/values.yaml
