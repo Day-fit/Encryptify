@@ -22,6 +22,9 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm dependency build
 
+      - name: List charts directory
+        run: ls -R charts
+
       - name: Copy charts
         run: |
           mkdir -p charts
