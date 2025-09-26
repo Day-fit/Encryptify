@@ -22,13 +22,13 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm dependency build
 
-      - name: List charts directory
-        run: ls -R charts
-
       - name: Copy charts
         run: |
           mkdir -p charts
           cp -r helm/ charts/
+
+      - name: List charts directory
+        run: ls -R charts
 
       - name: Add version in Values.yaml for Encryptify Apps
         run: |
