@@ -27,6 +27,8 @@ RUN --mount=type=secret,id=gh_name \
 
 # Compile source code
 RUN \
+    chmod +x ./.mvn && \
+    chmod +x ./mvnw && \
     cd /app/encryptify-auth && \
     ../mvnw package -DskipTests -s /tmp/settings.xml && \
     mv /app/encryptify-auth/target/encryptify-auth-*.jar /app/encryptify-auth.jar

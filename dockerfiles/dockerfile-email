@@ -13,6 +13,8 @@ WORKDIR /app
 
 # Compile source code
 RUN \
+    chmod +x ./.mvn && \
+    chmod +x ./mvnw && \
     cd /app/encryptify-email && \
     ../mvnw package -DskipTests && \
     mv /app/encryptify-email/target/encryptify-email-*.jar /app/encryptify-email.jar

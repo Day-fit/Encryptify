@@ -27,6 +27,8 @@ RUN --mount=type=secret,id=gh_name \
 
 # Compile source code
 RUN \
+    chmod +x ./.mvn && \
+    chmod +x ./mvnw && \
     cd /app/encryptify-core && \
     ../mvnw package -DskipTests -s /tmp/settings.xml && \
     mv /app/encryptify-core/target/encryptify-core-*.jar /app/encryptify-core.jar
