@@ -55,7 +55,7 @@ jobs:
           context: .
           push: true
           file: ./dockerfiles/dockerfile-${{ matrix.service }}
-          platforms: linux/amd64,linux/arm/v8
+          platforms: linux/amd64,linux/arm64/v8
           tags: ghcr.io/day-fit/encryptify-${{ matrix.service }}:latest,ghcr.io/day-fit/encryptify-${{ matrix.service }}:${{ github.event.release.tag_name }}
           secrets: |
             gh_name=${{ github.actor }}
@@ -100,5 +100,5 @@ jobs:
           context: .
           push: true
           file: ./dockerfiles/dockerfile-frontend
-          platforms: linux/amd64,linux/arm/v8
+          platforms: linux/amd64,linux/arm64/v8
           tags: ghcr.io/day-fit/encryptify-frontend:latest,ghcr.io/day-fit/encryptify-frontend:${{ github.event.release.tag_name }}
