@@ -30,25 +30,15 @@ jobs:
       - name: Add version in Values.yaml for Encryptify Apps
         run: |
           cd charts
-          cat >> ./Encryptify-Auth/values.yaml << EOF
-            tag: ${{ github.event.release.tag_name }}
-          EOF
-          cat >> ./Encryptify-Core/values.yaml << EOF
-            tag: ${{ github.event.release.tag_name }}
-          EOF
-          cat >>./Encryptify-Email/values.yaml << EOF
-            tag: ${{ github.event.release.tag_name }}
-          EOF
-          cat >> ./Encryptify-Encryption/values.yaml << EOF
-            tag: ${{ github.event.release.tag_name }}
-          EOF
+          yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Auth/values.yaml
+          yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Core/values.yaml
+          yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Email/values.yaml
+          yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Stats/values.yaml
+          yq e -i '.image.tag = "${{ github.event.release.tag_name }}"' charts/Encryptify-Encryption/values.yaml
 
       - name: Swap ACME server for production
         run: |
-          cd charts
-          cat >> Cluster-Infra/values.yaml << EOF
-            host: https://acme-v02.api.letsencrypt.org/directory
-          EOF
+          yq e -i '.host = "https://acme-v02.api.letsencrypt.org/directory"' charts/Cluster-Infra/values.yaml
 
       - name: Upload charts to ArgoCD repo
         env:
