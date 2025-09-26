@@ -30,16 +30,16 @@ jobs:
       - name: Add version in Values.yaml for Encryptify Apps
         run: |
           cd charts
-          cat >> Encryptify-Auth/values.yaml << EOF
+          cat >> ./Encryptify-Auth/values.yaml << EOF
             tag: ${{ github.event.release.tag_name }}
           EOF
-          cat >> Encryptify-Core/values.yaml << EOF
+          cat >> ./Encryptify-Core/values.yaml << EOF
             tag: ${{ github.event.release.tag_name }}
           EOF
-          cat >> Encryptify-Email/values.yaml << EOF
+          cat >>./Encryptify-Email/values.yaml << EOF
             tag: ${{ github.event.release.tag_name }}
           EOF
-          cat >> Encryptify-Encryption/values.yaml << EOF
+          cat >> ./Encryptify-Encryption/values.yaml << EOF
             tag: ${{ github.event.release.tag_name }}
           EOF
 
