@@ -1,8 +1,7 @@
-name: build-docker.yaml
+name: build-docker
 on:
   release:
-    types:
-      - released
+    types: [released]
 
 permissions:
   contents: read
@@ -14,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        service: [ auth, encryption, core, email, stats ]
+        service: [auth, encryption, core, email, stats]
     steps:
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -37,16 +36,16 @@ jobs:
           mkdir -p ~/.m2
           cat > ~/.m2/settings.xml <<EOF
           <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                                        http://maven.apache.org/xsd/settings-1.0.0.xsd">
-            <servers>
-              <server>
-                <id>github</id>
-                <username>${{ github.actor }}</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
-              </server>
-            </servers>
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+          http://maven.apache.org/xsd/settings-1.0.0.xsd">
+          <servers>
+          <server>
+          <id>github</id>
+          <username>${{ github.actor }}</username>
+          <password>${{ secrets.GITHUB_TOKEN }}</password>
+          </server>
+          </servers>
           </settings>
           EOF
 
@@ -57,10 +56,11 @@ jobs:
           push: true
           file: ./dockerfiles/dockerfile-${{ matrix.service }}
           platforms: linux/amd64,linux/arm/v8
-          tags: 'ghcr.io/day-fit/encryptify-${{ matrix.service }}:latest','ghcr.io/day-fit/encryptify-${{ matrix.service }}:${{ github.event.release.tag_name }}'
+          tags: ghcr.io/day-fit/encryptify-${{ matrix.service }}:latest,ghcr.io/day-fit/encryptify-${{ matrix.service }}:${{ github.event.release.tag_name }}
           secrets: |
             gh_name=${{ github.actor }}
             github_token=${{ secrets.GITHUB_TOKEN }}
+
   build-frontend:
     name: Build Encryptify Frontend Image
     runs-on: ubuntu-22.04
@@ -101,4 +101,4 @@ jobs:
           push: true
           file: ./dockerfiles/dockerfile-frontend
           platforms: linux/amd64,linux/arm/v8
-          tags: 'ghcr.io/day-fit/encryptify-frontend:latest', 'ghcr.io/day-fit/encryptify-frontend:${{ github.event.release.tag_name }}'
+          tags: ghcr.io/day-fit/encryptify-frontend:latest,ghcr.io/day-fit/encryptify-frontend:${{ github.event.release.tag_name }}
