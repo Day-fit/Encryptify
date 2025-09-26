@@ -57,7 +57,7 @@ jobs:
           push: true
           file: ./dockerfiles/dockerfile-${{ matrix.service }}
           platforms: linux/amd64,linux/arm/v8
-          tags: 'ghcr.io/day-fit/encryptify-${{ matrix.service }}:latest', 'ghcr.io/day-fit/encryptify-${{ matrix.service }}:${{ github.event.release.tag_name }}'
+          tags: 'ghcr.io/day-fit/encryptify-${{ matrix.service }}:latest','ghcr.io/day-fit/encryptify-${{ matrix.service }}:${{ github.event.release.tag_name }}'
           secrets: |
             gh_name=${{ github.actor }}
             github_token=${{ secrets.GITHUB_TOKEN }}
