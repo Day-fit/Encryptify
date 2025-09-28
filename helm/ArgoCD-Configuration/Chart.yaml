@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ArgoCD-Configuration
+description: Chart containing ArgoCD configuration
+version: 0.0.1-SNAPSHOT
