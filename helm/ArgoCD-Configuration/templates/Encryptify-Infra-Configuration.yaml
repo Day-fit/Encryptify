@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: Encryptify-Infra-Configuration
+  name: encryptify-infra-configuration
   namespace: infra
 spec:
   syncPolicy:
@@ -10,11 +10,11 @@ spec:
       selfHeal: true
   project: encryptify
   source:
-    chart: Encryptify-Infra
+    chart: encryptify-infra
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
     helm:
-      releaseName: Encryptify-Infra
+      releaseName: encryptify-infra
   destination:
     server: "https://kubernetes.default.svc"
     namespace: infra

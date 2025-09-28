@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: Encryptify-Auth-Configuration
+  name: encryptify-auth-configuration
   namespace: encryptify
 spec:
   syncPolicy:
@@ -10,11 +10,11 @@ spec:
       selfHeal: true
   project: encryptify
   source:
-    chart: Encryptify-Auth
+    chart: encryptify-auth
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
     helm:
-      releaseName: Encryptify-Auth
+      releaseName: encryptify-auth
   destination:
     server: "https://kubernetes.default.svc"
     namespace: encryptify

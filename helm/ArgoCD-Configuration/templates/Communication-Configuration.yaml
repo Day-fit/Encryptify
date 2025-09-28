@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: Communication-Configuration
+  name: communication-configuration
   namespace: communication
 spec:
   syncPolicy:
@@ -10,11 +10,11 @@ spec:
       selfHeal: true
   project: infra
   source:
-    chart: Communication
+    chart: communication
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
     helm:
-      releaseName: Communication
+      releaseName: communication
   destination:
     server: "https://kubernetes.default.svc"
     namespace: communication

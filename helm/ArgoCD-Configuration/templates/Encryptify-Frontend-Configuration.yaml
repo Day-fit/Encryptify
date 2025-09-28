@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: Encryptify-Frontend-Configuration
+  name: encryptify-frontend-configuration
   namespace: encryptify
 spec:
   syncPolicy:
@@ -10,11 +10,11 @@ spec:
       selfHeal: true
   project: encryptify
   source:
-    chart: Encryptify-Frontend
+    chart: encryptify-frontend
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
     helm:
-      releaseName: Encryptify-Frontend
+      releaseName: encryptify-frontend
   destination:
     server: "https://kubernetes.default.svc"
     namespace: encryptify
