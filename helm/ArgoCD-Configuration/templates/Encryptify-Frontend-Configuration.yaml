@@ -12,6 +12,7 @@ spec:
   source:
     chart: Encryptify-Frontend
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
+    targetRevision: HEAD
     helm:
       releaseName: Encryptify-Frontend
   destination:
