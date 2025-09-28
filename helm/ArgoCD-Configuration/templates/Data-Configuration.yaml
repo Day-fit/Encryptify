@@ -8,7 +8,7 @@ spec:
     automated:
       enabled: true
       selfHeal: true
-  project: infra
+  project: default
   source:
     chart: data
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
