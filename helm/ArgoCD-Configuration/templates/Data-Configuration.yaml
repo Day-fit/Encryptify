@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: Data-Configuration
+  namespace: data
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+  project: infra
+  source:
+    chart: Data
+    repoURL: https://github.com/Day-fit/Encryptify-CD.git
+    targetRevision: HEAD
+    helm:
+      releaseName: Data
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: data

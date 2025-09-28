@@ -8,6 +8,8 @@ postgresql:
     username: encryptifyapp
     enablePostgresUser: true
 redis:
+  replica:
+    enabled: false
   auth:
     existingSecret: data-config
     existingSecretPasswordKey: redis-password

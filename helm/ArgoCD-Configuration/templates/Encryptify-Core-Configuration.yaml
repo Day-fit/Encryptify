@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: Encryptify-Core-Configuration
+  namespace: encryptify
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
+  project: encryptify
+  source:
+    chart: Encryptify-Core
+    repoURL: https://github.com/Day-fit/Encryptify-CD.git
+    targetRevision: HEAD
+    helm:
+      releaseName: Encryptify-Core
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: encryptify
