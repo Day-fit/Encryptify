@@ -10,7 +10,7 @@ spec:
       selfHeal: true
   project: default
   source:
-    chart: Cluster-Infra
+    path: Cluster-Infra
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
     helm:
