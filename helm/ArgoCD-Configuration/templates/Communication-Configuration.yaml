@@ -12,6 +12,7 @@ spec:
   source:
     chart: Communication
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
+    targetRevision: HEAD
     helm:
       releaseName: Communication
   destination:
