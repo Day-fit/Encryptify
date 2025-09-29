@@ -1,3 +1,7 @@
+global:
+  security:
+    allowInsecureImages: true
+
 postgresql:
   auth:
     existingSecret: data-config
@@ -7,6 +11,10 @@ postgresql:
     database: encryptify_prod
     username: encryptifyapp
     enablePostgresUser: true
+  image:
+    repository: bitnamilegacy/postgresql
+    tag: 17.6.0-debian-12-r4
+
 redis:
   replica:
     enabled: false
@@ -14,8 +22,15 @@ redis:
     existingSecret: data-config
     existingSecretPasswordKey: redis-password
   usePassword: true
+  image:
+    repository: bitnamilegacy/redis
+    tag: 8.2.1-debian-12-r0
+
 minio:
   auth:
     existingSecret: data-config
     rootUserSecretKey: minio-username
     rootPasswordSecretKey: minio-password
+  image:
+    repository: bitnamilegacy/minio
+    tag: 2025.7.23-debian-12-r5
