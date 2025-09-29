@@ -9,7 +9,7 @@ spec:
     - hosts:
         - encryptify.dayfit.pl
       secretName: tls-cluster-issuer
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
     - host: encryptify.dayfit.pl
       http:
