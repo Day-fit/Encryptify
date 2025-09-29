@@ -29,7 +29,7 @@ spec:
   source:
     repoURL: https://github.com/Day-fit/Encryptify-CD.git
     targetRevision: HEAD
-    path: helm/ArgoCD-Configuration
+    path: ArgoCD-Configuration
     helm:
       releaseName: encryptify-app-of-apps
   destination:
