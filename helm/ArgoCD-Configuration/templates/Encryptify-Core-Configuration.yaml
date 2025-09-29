@@ -2,12 +2,14 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: encryptify-core-configuration
-  namespace: encryptify
+  namespace: argocd
 spec:
   syncPolicy:
     automated:
-      enabled: true
+      prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
   project: default
   source:
     path: Encryptify-Core

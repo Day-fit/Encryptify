@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data
+  labels:
+    name: data
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: encryptify
+  labels:
+    name: encryptify
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infra
+  labels:
+    name: infra
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: communication
+  labels:
+    name: communication

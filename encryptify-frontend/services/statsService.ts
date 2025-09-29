@@ -45,3 +45,4 @@ class StatsService {
 }
 
 export const statsService = new StatsService()
+
