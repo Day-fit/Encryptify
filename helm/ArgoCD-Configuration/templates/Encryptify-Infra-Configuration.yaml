@@ -19,4 +19,4 @@ spec:
       releaseName: encryptify-infra
   destination:
     server: "https://kubernetes.default.svc"
-    namespace: infra
+    namespace: encryptify
