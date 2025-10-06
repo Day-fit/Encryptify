@@ -15,3 +15,7 @@ dependencies:
   - name: operator
     version: 7.1.1
     repository: https://operator.min.io
+
+  - name: tenant
+    version: 7.1.1
+    repository: https://operator.min.io

@@ -26,11 +26,9 @@ redis:
     repository: bitnamilegacy/redis
     tag: 8.2.1-debian-12-r0
 
-minio:
-  auth:
-    existingSecret: data-config
-    rootUserSecretKey: minio-username
-    rootPasswordSecretKey: minio-password
-  image:
-    repository: bitnamilegacy/minio
-    tag: 2025.7.23-debian-12-r5
+tenant:
+  tenant:
+    configSecret:
+      name: data-config
+      accessKey: minio-username
+      secretKey: minio-password
