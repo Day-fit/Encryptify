@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: stats-deployment
+  name: encryptify-stats
   labels:
     service-name: stats
 spec:
@@ -51,6 +51,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.auth.existingSecretName }}
                   key: RABBITMQ_HOST
+            - name: RABBITMQ_STATS_STREAM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: RABBITMQ_STATS_STREAM
 
             - name: DB_HOST
               valueFrom:
@@ -72,6 +77,13 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.auth.existingSecretName }}
                   key: DB_NAME
+
+            - name: ALLOWED_ORIGINS_PATTERNS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: ALLOWED_ORIGINS_PATTERNS
+
 
             - name: JWKS_URI
               valueFrom:

@@ -83,3 +83,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.auth.existingSecretName}}
                   key: ENCRYPTIFY_DOMAIN
+
+            - name: ALLOWED_ORIGINS_PATTERNS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecretName }}
+                  key: ALLOWED_ORIGINS_PATTERNS

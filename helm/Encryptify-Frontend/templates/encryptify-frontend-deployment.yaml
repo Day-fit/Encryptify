@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: encryptify-frontend-deployment
+  name: encryptify-frontend
   labels:
     service-name: frontend
 spec:

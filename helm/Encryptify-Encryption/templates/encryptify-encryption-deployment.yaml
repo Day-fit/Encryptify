@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: encryption-deployment
+  name: encryptify-encryption
   labels:
     service-name: encryption
 spec:
