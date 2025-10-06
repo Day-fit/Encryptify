@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: encryptify-auth
 spec:
   selector:
     service-name: auth

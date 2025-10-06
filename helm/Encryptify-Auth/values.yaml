@@ -1,4 +1,5 @@
 replicaCount: 1
+profiles: [prod]
 auth:
   existingSecretName: "encryptify-app-config"
 image:

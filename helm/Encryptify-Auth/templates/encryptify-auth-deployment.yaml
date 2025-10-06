@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: encryptify-auth
   labels:
     service-name: auth
 spec:
@@ -22,6 +22,9 @@ spec:
           ports:
             - containerPort: 8083
           env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.profiles | join ","}}
+
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
