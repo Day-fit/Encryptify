@@ -20,6 +20,7 @@ jobs:
         run: | 
           cd helm/Data
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add minio-operator https://operator.min.io
           helm dependency build
 
       - name: Copy charts
