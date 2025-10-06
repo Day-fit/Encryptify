@@ -1,0 +1,12 @@
+dependencies:
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.7.27
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 22.0.7
+- name: operator
+  repository: https://operator.min.io
+  version: 7.1.1
+digest: sha256:a864ae8b57016748d7ed68df9cbbd24d24ac9be89a7b0513be4ea9eccb76a64e
+generated: "2025-10-06T13:11:07.177628842+02:00"
