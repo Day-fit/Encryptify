@@ -30,7 +30,7 @@ spec:
                   number: 8082
             pathType: Prefix
 
-          - path: /api/v1/statistics
+          - path: /api/v1/statistics/
             backend:
               service:
                 name: encryptify-stats
