@@ -39,7 +39,7 @@
   - `auth/`
   - `auth-lib/`
   - `email/`
-  - `encryption/` (working on it!)
+  - `encryption/` (used for key-sync!) (working on it!)
   - `frontend/`
 - **CI/CD:**
   - Build & test with GitHub Actions
